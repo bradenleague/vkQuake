@@ -211,6 +211,10 @@ typedef struct client_s
 	int		 lastmovemessage;
 	double	 lastmovetime;
 	qboolean knowntoqc; // putclientinserver was called
+
+	// Variable jump hold tracking
+	double   jump_start_time;
+	qboolean jump_held;
 } client_t;
 
 //=============================================================================
