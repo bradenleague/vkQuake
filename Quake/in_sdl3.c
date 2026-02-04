@@ -277,7 +277,7 @@ static bool SDLCALL IN_FilterMouseEvents (const SDL_Event *event)
 {
 #ifdef USE_RMLUI
 	/* Don't filter mouse events when RmlUI menu needs them */
-	if (RmlUI_WantsMenuInput())
+	if (RmlUI_WantsMenuInput() || RmlUI_IsMenuVisible())
 		return true;
 #endif
 

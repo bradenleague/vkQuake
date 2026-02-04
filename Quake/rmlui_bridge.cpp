@@ -155,6 +155,11 @@ int RmlUI_IsVisible(void)
     return UI_IsVisible();
 }
 
+int RmlUI_IsMenuVisible(void)
+{
+    return UI_IsMenuVisible();
+}
+
 void RmlUI_Toggle(void)
 {
     UI_Toggle();

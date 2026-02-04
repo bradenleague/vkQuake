@@ -697,6 +697,7 @@ void CL_RelinkEntities (void)
 		cl.velocity[i] = cl.mvelocity[1][i] + frac * (cl.mvelocity[0][i] - cl.mvelocity[1][i]);
 
 	SCR_UpdateZoom ();
+	SCR_UpdateFovLerp ();
 
 	if (cls.demoplayback)
 	{

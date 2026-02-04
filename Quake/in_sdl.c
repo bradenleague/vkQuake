@@ -24,6 +24,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "quakedef.h"
 #include "in_sdl.h"
 
+#ifdef USE_RMLUI
+#include "rmlui_bridge.h"
+#endif
 static qboolean textmode;
 
 cvar_t in_debugkeys = {"in_debugkeys", "0", CVAR_NONE};
@@ -140,6 +143,13 @@ void IN_Deactivate (qboolean free_cursor)
 	}
 
 	/* discard all mouse events when input is deactivated */
+#ifdef USE_RMLUI
+	if (RmlUI_IsMenuVisible () || RmlUI_WantsMenuInput ())
+	{
+		IN_EndIgnoringMouseEvents ();
+		return;
+	}
+#endif
 	IN_BeginIgnoringMouseEvents ();
 }
 

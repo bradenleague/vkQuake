@@ -220,6 +220,22 @@ void DropPunchAngle (void)
 
 /*
 ===================
+SV_GetEntityMaxSpeed
+
+Per-entity maxspeed: if the QC sets .maxspeed on the player,
+use that instead of the global sv_maxspeed cvar.
+===================
+*/
+static float SV_GetEntityMaxSpeed (void)
+{
+	eval_t *val = GetEdictFieldValue (sv_player, ED_FindFieldOffset ("maxspeed"));
+	if (val && val->_float > 0)
+		return val->_float;
+	return sv_maxspeed.value;
+}
+
+/*
+===================
 SV_WaterMove
 
 ===================
@@ -244,10 +260,19 @@ void SV_WaterMove (void)
 		wishvel[2] += cmd.upmove;
 
 	wishspeed = VectorLength (wishvel);
-	if (wishspeed > sv_maxspeed.value)
 	{
-		VectorScale (wishvel, sv_maxspeed.value / wishspeed, wishvel);
-		wishspeed = sv_maxspeed.value;
+		float maxspd = SV_GetEntityMaxSpeed ();
+		if (maxspd != sv_maxspeed.value && sv_maxspeed.value > 0 && wishspeed > 0)
+		{
+			float scale = maxspd / sv_maxspeed.value;
+			VectorScale (wishvel, scale, wishvel);
+			wishspeed *= scale;
+		}
+		if (wishspeed > maxspd)
+		{
+			VectorScale (wishvel, maxspd / wishspeed, wishvel);
+			wishspeed = maxspd;
+		}
 	}
 	wishspeed *= 0.7;
 
@@ -311,10 +336,13 @@ void SV_NoclipMove (void)
 	velocity[2] = forward[2] * cmd.forwardmove + right[2] * cmd.sidemove;
 	velocity[2] += cmd.upmove * 2; // doubled to match running speed
 
-	if (VectorLength (velocity) > sv_maxspeed.value)
 	{
-		VectorNormalize (velocity);
-		VectorScale (velocity, sv_maxspeed.value, velocity);
+		float maxspd = SV_GetEntityMaxSpeed ();
+		if (VectorLength (velocity) > maxspd)
+		{
+			VectorNormalize (velocity);
+			VectorScale (velocity, maxspd, velocity);
+		}
 	}
 }
 
@@ -349,10 +377,19 @@ void SV_AirMove (void)
 
 	VectorCopy (wishvel, wishdir);
 	wishspeed = VectorNormalize (wishdir);
-	if (wishspeed > sv_maxspeed.value)
 	{
-		VectorScale (wishvel, sv_maxspeed.value / wishspeed, wishvel);
-		wishspeed = sv_maxspeed.value;
+		float maxspd = SV_GetEntityMaxSpeed ();
+		if (maxspd != sv_maxspeed.value && sv_maxspeed.value > 0 && wishspeed > 0)
+		{
+			float scale = maxspd / sv_maxspeed.value;
+			VectorScale (wishvel, scale, wishvel);
+			wishspeed *= scale;
+		}
+		if (wishspeed > maxspd)
+		{
+			VectorScale (wishvel, maxspd / wishspeed, wishvel);
+			wishspeed = maxspd;
+		}
 	}
 
 	if (sv_player->v.movetype == MOVETYPE_NOCLIP)

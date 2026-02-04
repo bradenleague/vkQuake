@@ -70,6 +70,14 @@ cvar_t gl_cshiftpercent_powerup = {"gl_cshiftpercent_powerup", "100", CVAR_NONE}
 
 cvar_t r_viewmodel_quake = {"r_viewmodel_quake", "0", CVAR_ARCHIVE};
 
+// HUD inertia — vertical bounce on jump, horizontal sway on camera whip
+float		v_hud_offset_x;			// horizontal UV offset, read by post-process
+float		v_hud_offset_y;			// vertical UV offset, read by post-process
+static float hud_vel_x;			// internal horizontal velocity
+static float hud_vel_y;			// internal vertical velocity
+static qboolean hud_prev_onground;	// previous frame's onground state
+static float hud_prev_yaw;			// previous frame's view yaw
+
 extern int in_forward, in_forward2, in_back;
 
 vec3_t v_punchangles[2];	   // johnfitz -- copied from cl.punchangle.  0 is current, 1 is previous value. never the same unless map just loaded
@@ -140,6 +148,67 @@ float V_CalcBob (void)
 	else if (bob < -7)
 		bob = -7;
 	return bob;
+}
+
+/*
+===============
+V_UpdateHudInertia
+
+Applies subtle HUD offsets:
+- Vertical bounce when the player jumps
+- Horizontal sway when the camera whips left/right
+Both axes use critically-damped springs to return to center.
+===============
+*/
+static void V_UpdateHudInertia (void)
+{
+	float dt = cl.time - cl.oldtime;
+	if (dt <= 0.f || dt > 0.1f)
+		dt = 0.01f;
+
+	float omega_y = 18.f; // vertical spring — tight to match jump arc
+	float omega_x = 14.f; // horizontal spring — slightly snappier
+
+	// --- Vertical: jump bounce ---
+	if (hud_prev_onground && !cl.onground && cl.velocity[2] > 0.f)
+		hud_vel_y = -0.2f;
+
+	hud_prev_onground = cl.onground;
+
+	// --- Horizontal: yaw sway ---
+	float yaw = cl.viewangles[1];
+	float yaw_delta = yaw - hud_prev_yaw;
+
+	// Handle angle wrapping
+	if (yaw_delta > 180.f)  yaw_delta -= 360.f;
+	if (yaw_delta < -180.f) yaw_delta += 360.f;
+
+	hud_prev_yaw = yaw;
+
+	// Scale yaw delta into a UV impulse (negative = HUD lags behind turn)
+	float yaw_impulse = -yaw_delta * 0.002f;
+	hud_vel_x += yaw_impulse;
+
+	// --- Spring integration (both axes) ---
+	float accel_x = -omega_x * omega_x * v_hud_offset_x - 2.f * omega_x * hud_vel_x;
+	hud_vel_x += accel_x * dt;
+	v_hud_offset_x += hud_vel_x * dt;
+
+	float accel_y = -omega_y * omega_y * v_hud_offset_y - 2.f * omega_y * hud_vel_y;
+	hud_vel_y += accel_y * dt;
+	v_hud_offset_y += hud_vel_y * dt;
+
+	// Kill tiny residuals
+	if (fabsf (v_hud_offset_x) < 0.0001f && fabsf (hud_vel_x) < 0.001f)
+	{
+		v_hud_offset_x = 0.f;
+		hud_vel_x = 0.f;
+	}
+	if (fabsf (v_hud_offset_y) < 0.0001f && fabsf (hud_vel_y) < 0.001f)
+	{
+		v_hud_offset_y = 0.f;
+		hud_vel_y = 0.f;
+	}
 }
 
 //=============================================================================
@@ -870,6 +939,7 @@ V_SetupFrame
 */
 void V_SetupFrame (void)
 {
+	V_UpdateHudInertia ();
 	V_UpdateBlend ();
 	if (!con_forcedup)
 	{

@@ -89,6 +89,7 @@ void RmlUI_HideDocument(const char *path);
 /* Visibility control */
 void RmlUI_SetVisible(int visible);
 int RmlUI_IsVisible(void);
+int RmlUI_IsMenuVisible(void);
 void RmlUI_Toggle(void);
 
 /* Debug overlay toggle */

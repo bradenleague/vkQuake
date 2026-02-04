@@ -147,7 +147,7 @@ void IN_SendKeyEvents (void)
 
 #ifdef USE_RMLUI
 			/* Forward text input to RmlUI when menu is active */
-			if (RmlUI_WantsMenuInput())
+			if (RmlUI_WantsMenuInput() || RmlUI_IsMenuVisible())
 			{
 				unsigned char *ch;
 				for (ch = (unsigned char *)event.text.text; *ch; ch++)
@@ -189,7 +189,7 @@ void IN_SendKeyEvents (void)
 			/* Forward key events to RmlUI if it wants menu input
 			 * EXCEPT for escape key which is handled by keys.c for proper
 			 * menu stack navigation */
-			if (RmlUI_WantsMenuInput() && event.key.keysym.sym != SDLK_ESCAPE)
+			if ((RmlUI_WantsMenuInput() || RmlUI_IsMenuVisible()) && event.key.keysym.sym != SDLK_ESCAPE)
 			{
 				if (RmlUI_KeyEvent (event.key.keysym.sym, event.key.keysym.scancode, down, event.key.repeat))
 					break;  /* Consumed by RmlUI */
@@ -208,7 +208,7 @@ void IN_SendKeyEvents (void)
 		case SDL_MOUSEBUTTONUP:
 #ifdef USE_RMLUI
 			/* When RmlUI wants input, it consumes all mouse button events. */
-			if (RmlUI_WantsMenuInput ())
+			if (RmlUI_WantsMenuInput() || RmlUI_IsMenuVisible())
 			{
 				if (in_debugkeys.value)
 					Con_Printf ("SDL mouse button %d state %d (RmlUI wants=1)\n", event.button.button, event.button.state);
@@ -227,7 +227,7 @@ void IN_SendKeyEvents (void)
 		case SDL_MOUSEWHEEL:
 #ifdef USE_RMLUI
 			/* When RmlUI wants input, it consumes all wheel events. */
-			if (RmlUI_WantsMenuInput ())
+			if (RmlUI_WantsMenuInput() || RmlUI_IsMenuVisible())
 			{
 				RmlUI_MouseScroll ((float)event.wheel.x, (float)event.wheel.y);
 				break;  /* Consumed by RmlUI */
@@ -250,7 +250,7 @@ void IN_SendKeyEvents (void)
 			/* Always update RmlUI cursor position for hover effects */
 			RmlUI_MouseMove (event.motion.x, event.motion.y, event.motion.xrel, event.motion.yrel);
 			/* Don't pass motion to game when RmlUI menu is active */
-			if (RmlUI_WantsMenuInput())
+			if (RmlUI_WantsMenuInput() || RmlUI_IsMenuVisible())
 				break;
 #endif
 			IN_MouseMotion (event.motion.xrel, event.motion.yrel);
@@ -301,7 +301,7 @@ static int SDLCALL IN_FilterMouseEvents (const SDL_Event *event)
 {
 #ifdef USE_RMLUI
 	/* Don't filter mouse events when RmlUI menu needs them */
-	if (RmlUI_WantsMenuInput())
+	if (RmlUI_WantsMenuInput() || RmlUI_IsMenuVisible())
 		return 1;
 #endif
 

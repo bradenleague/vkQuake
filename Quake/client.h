@@ -279,6 +279,8 @@ typedef struct
 	float zoom;
 	float zoomdir;
 
+	float fov_current; // smoothly interpolated FOV (0 = uninitialized)
+
 	char serverinfo[8192]; // \key\value infostring data.
 } client_state_t;
 

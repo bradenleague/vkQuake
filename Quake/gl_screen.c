@@ -317,6 +317,41 @@ void SCR_UpdateZoom (void)
 
 /*
 ====================
+SCR_UpdateFovLerp
+
+Smooth FOV interpolation — lerps cl.fov_current toward scr_fov.value
+over ~0.18 seconds using exponential decay.
+====================
+*/
+void SCR_UpdateFovLerp (void)
+{
+	float target = scr_fov.value;
+	float dt = cl.time - cl.oldtime;
+	float diff;
+
+	// Initialize on first use
+	if (cl.fov_current == 0.f)
+	{
+		cl.fov_current = target;
+		return;
+	}
+
+	diff = target - cl.fov_current;
+
+	// Snap when close enough
+	if (fabsf (diff) < 0.1f)
+	{
+		cl.fov_current = target;
+		return;
+	}
+
+	// Exponential decay: tau=0.06 gives ~95% in 0.18s
+	cl.fov_current += diff * (1.f - expf (-dt / 0.06f));
+	vid.recalc_refdef = 1;
+}
+
+/*
+====================
 AdaptFovx
 Adapt a 4:3 horizontal FOV to the current screen size using the "Hor+" scaling:
 2.0 * atan(width / height * 3.0 / 4.0 * tan(fov_x / 2.0))
@@ -420,7 +455,10 @@ static void SCR_CalcRefdef (void)
 
 	zoom = cl.zoom;
 	zoom *= zoom * (3.f - 2.f * zoom); // smoothstep
-	r_refdef.basefov = scr_fov.value + (scr_zoomfov.value - scr_fov.value) * zoom;
+	{
+		float fov = cl.fov_current > 0.f ? cl.fov_current : scr_fov.value;
+		r_refdef.basefov = fov + (scr_zoomfov.value - fov) * zoom;
+	}
 	r_refdef.fov_x = AdaptFovx (r_refdef.basefov, vid.width, vid.height);
 	r_refdef.fov_y = CalcFovy (r_refdef.fov_x, r_refdef.vrect.width, r_refdef.vrect.height);
 

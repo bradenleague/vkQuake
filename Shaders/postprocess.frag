@@ -8,6 +8,8 @@ layout (push_constant) uniform PushConsts
 	float contrast;
 	float warp_strength;
 	float chromatic_strength;
+	float ui_offset_x;
+	float ui_offset_y;
 }
 push_constants;
 
@@ -38,6 +40,10 @@ void main ()
 	// Scale down UI slightly when warped - gives a "curved glass" feel
 	float ui_scale = 1.0 + abs (warp) * 0.5;
 	vec2 ui_uv = (in_uv - 0.5) * ui_scale + 0.5;
+
+	// HUD inertia offset (jump bounce + camera sway)
+	ui_uv.x += push_constants.ui_offset_x;
+	ui_uv.y += push_constants.ui_offset_y;
 
 	vec4 ui;
 

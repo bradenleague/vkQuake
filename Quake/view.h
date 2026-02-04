@@ -37,4 +37,7 @@ float V_CalcRoll (vec3_t angles, vec3_t velocity);
 void  V_RestoreAngles (void);
 // void V_UpdatePalette (void); //johnfitz
 
+extern float v_hud_offset_x; // HUD horizontal sway (UV-space), read by post-process
+extern float v_hud_offset_y; // HUD vertical bounce (UV-space), read by post-process
+
 #endif /* _QUAKE_VIEW_H */

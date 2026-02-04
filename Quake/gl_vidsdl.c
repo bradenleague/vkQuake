@@ -3178,18 +3178,20 @@ static void GL_EndRenderingTask (end_rendering_parms_t *parms)
 
 		// Render post process
 		GL_Viewport (cbx, 0, 0, vid.width, vid.height, 0.0f, 1.0f);
-		float postprocess_values[4] = {
+		float postprocess_values[6] = {
 			vid_gamma.value,
 			q_min (2.0f, q_max (1.0f, vid_contrast.value)),
 			r_ui_warp.value,
 			r_ui_chromatic.value,
+			v_hud_offset_x,
+			v_hud_offset_y,
 		};
 
 		R_BindPipeline (cbx, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkan_globals.postprocess_pipeline);
 		VkDescriptorSet pp_sets[2] = {postprocess_descriptor_set, postprocess_ui_descriptor_set};
 		vkCmdBindDescriptorSets (
 			cbx->cb, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkan_globals.postprocess_pipeline.layout.handle, 0, 2, pp_sets, 0, NULL);
-		R_PushConstants (cbx, VK_SHADER_STAGE_FRAGMENT_BIT, 0, 4 * sizeof (float), postprocess_values);
+		R_PushConstants (cbx, VK_SHADER_STAGE_FRAGMENT_BIT, 0, 6 * sizeof (float), postprocess_values);
 		vkCmdDraw (cbx->cb, 3, 1, 0, 0);
 	}
 
