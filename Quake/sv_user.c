@@ -164,6 +164,10 @@ SV_Accelerate
 */
 cvar_t sv_maxspeed = {"sv_maxspeed", "320", CVAR_NOTIFY | CVAR_SERVERINFO};
 cvar_t sv_accelerate = {"sv_accelerate", "10", CVAR_NONE};
+cvar_t sv_airaccelerate = {"sv_airaccelerate", "7", CVAR_NONE};
+cvar_t sv_jumpbase = {"sv_jumpbase", "200", CVAR_NONE};
+cvar_t sv_jumphold_time = {"sv_jumphold_time", "0.25", CVAR_NONE};
+cvar_t sv_jumphold_accel = {"sv_jumphold_accel", "400", CVAR_NONE};
 void   SV_Accelerate (float wishspeed, const vec3_t wishdir)
 {
 	int	  i;
@@ -194,7 +198,7 @@ void SV_AirAccelerate (float wishspeed, vec3_t wishveloc)
 	if (addspeed <= 0)
 		return;
 	//	accelspeed = sv_accelerate.value * host_frametime;
-	accelspeed = sv_accelerate.value * wishspeed * host_frametime;
+	accelspeed = sv_airaccelerate.value * wishspeed * host_frametime;
 	if (accelspeed > addspeed)
 		accelspeed = addspeed;
 
