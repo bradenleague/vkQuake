@@ -97,7 +97,7 @@ cvar_t snd_pauselooping = {"snd_pauselooping", "1", CVAR_ARCHIVE};
 cvar_t snd_filterquality = {"snd_filterquality", SND_FILTERQUALITY_DEFAULT, CVAR_NONE};
 
 static cvar_t nosound = {"nosound", "0", CVAR_NONE};
-static cvar_t ambient_level = {"ambient_level", "0.3", CVAR_NONE};
+static cvar_t ambient_level = {"ambient_level", "0.3", CVAR_ARCHIVE};
 static cvar_t ambient_fade = {"ambient_fade", "100", CVAR_NONE};
 static cvar_t snd_noextraupdate = {"snd_noextraupdate", "0", CVAR_NONE};
 static cvar_t snd_show = {"snd_show", "0", CVAR_NONE};
