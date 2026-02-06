@@ -3182,7 +3182,7 @@ static void GL_EndRenderingTask (end_rendering_parms_t *parms)
 			vid_gamma.value,
 			q_min (2.0f, q_max (1.0f, vid_contrast.value)),
 			r_ui_warp.value,
-			r_ui_chromatic.value,
+			r_ui_chromatic.value * (1080.0f / (float)vid.height),
 			v_hud_offset_x,
 			v_hud_offset_y,
 		};
