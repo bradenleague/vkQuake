@@ -290,24 +290,17 @@ if use_rmlui
     cflags += '-DUSE_RMLUI'
     cxxflags += '-DUSE_RMLUI'
 
-    # RmlUI sources from tatoosh library (layered architecture)
+    # RmlUI sources
     rmlui_srcs = files(
-        # Interface layer (C API)
-        '../rmlui/interface/ui_manager.cpp',
-        # Application layer
-        '../rmlui/application/document_manager.cpp',
-        '../rmlui/application/menu_stack.cpp',
-        # Infrastructure layer
-        '../rmlui/infrastructure/render_interface_vk.cpp',
-        '../rmlui/infrastructure/system_interface.cpp',
-        '../rmlui/infrastructure/game_data_model.cpp',
-        '../rmlui/infrastructure/cvar_binding.cpp',
-        '../rmlui/infrastructure/menu_event_handler.cpp',
-        '../rmlui/infrastructure/stb_image_impl.c',
-        # Infrastructure layer - port implementations
-        '../rmlui/infrastructure/quake_cvar_provider.cpp',
-        '../rmlui/infrastructure/quake_command_executor.cpp',
-        '../rmlui/infrastructure/quake_logger.cpp',
+        '../rmlui/ui_manager.cpp',
+        '../rmlui/internal/render_interface_vk.cpp',
+        '../rmlui/internal/system_interface.cpp',
+        '../rmlui/internal/game_data_model.cpp',
+        '../rmlui/internal/cvar_binding.cpp',
+        '../rmlui/internal/menu_event_handler.cpp',
+        '../rmlui/internal/stb_image_impl.c',
+        '../rmlui/internal/quake_cvar_provider.cpp',
+        '../rmlui/internal/quake_command_executor.cpp',
     )
 
     # Add RmlUI shaders to the shaders list
@@ -317,15 +310,11 @@ if use_rmlui
         'Shaders/rmlui_notex.frag',
     ]
 
-    # RmlUI include directories - use include_directories() for proper handling
+    # RmlUI include directories
     rmlui_incdir = include_directories(
         '../external/rmlui/Include',
         '../rmlui',
-        '../rmlui/interface',
-        '../rmlui/application',
-        '../rmlui/domain',
-        '../rmlui/domain/ports',
-        '../rmlui/infrastructure',
+        '../rmlui/internal',
         'Quake',
     )
 
