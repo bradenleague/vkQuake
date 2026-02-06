@@ -124,6 +124,15 @@ void IN_SendKeyEvents (void)
 		case SDL_EVENT_WINDOW_FOCUS_GAINED:
 			S_UnblockSound ();
 			VID_FocusGained ();
+#ifdef USE_RMLUI
+			if (UI_WantsMenuInput() || UI_IsMenuVisible())
+			{
+				float mouse_x, mouse_y;
+				IN_EndIgnoringMouseEvents ();
+				SDL_GetMouseState (&mouse_x, &mouse_y);
+				UI_MouseMove ((int)mouse_x, (int)mouse_y, 0, 0);
+			}
+#endif
 			break;
 		case SDL_EVENT_WINDOW_FOCUS_LOST:
 			S_BlockSound ();

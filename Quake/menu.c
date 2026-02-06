@@ -653,8 +653,6 @@ void M_Menu_Main_f (void)
 	// the menu is displayed. The demo loop will keep running.
 	if (ui_use_rmlui_menus.value)
 	{
-		IN_Deactivate (true);
-		key_dest = key_menu;
 		UI_PushMenu("ui/rml/menus/main_menu.rml");
 		return;
 	}
@@ -2245,8 +2243,6 @@ void M_Menu_Options_f (void)
 #ifdef USE_RMLUI
 	if (ui_use_rmlui_menus.value)
 	{
-		IN_Deactivate (true);
-		key_dest = key_menu;
 		UI_PushMenu("ui/rml/menus/options.rml");
 		return;
 	}

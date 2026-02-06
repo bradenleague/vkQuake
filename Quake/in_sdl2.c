@@ -119,12 +119,21 @@ void IN_SendKeyEvents (void)
 	{
 		switch (event.type)
 		{
-		case SDL_WINDOWEVENT:
-			if (event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED)
-			{
-				S_UnblockSound ();
-				VID_FocusGained ();
-			}
+			case SDL_WINDOWEVENT:
+				if (event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED)
+				{
+					S_UnblockSound ();
+					VID_FocusGained ();
+#ifdef USE_RMLUI
+					if (UI_WantsMenuInput() || UI_IsMenuVisible())
+					{
+						int mouse_x, mouse_y;
+						IN_EndIgnoringMouseEvents ();
+						SDL_GetMouseState (&mouse_x, &mouse_y);
+						UI_MouseMove (mouse_x, mouse_y, 0, 0);
+					}
+#endif
+				}
 			else if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST)
 			{
 				S_BlockSound ();

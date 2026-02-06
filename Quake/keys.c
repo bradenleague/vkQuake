@@ -1035,8 +1035,6 @@ void Key_EventWithKeycode (int key, qboolean down, int keycode)
 			/* If RmlUI menus are enabled, use them instead of Quake menus */
 			if (ui_use_rmlui_menus.value)
 			{
-				IN_Deactivate (true);  /* Always free cursor for RmlUI menus */
-				key_dest = key_menu;
 				/* Show pause menu if in-game, main menu otherwise */
 				if (sv.active)
 					UI_PushMenu ("ui/rml/menus/pause_menu.rml");

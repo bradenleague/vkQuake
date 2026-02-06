@@ -69,20 +69,12 @@ static void UI_Toggle_f (void)
 	if (UI_WantsMenuInput ())
 		UI_CloseMenu_f ();
 	else
-	{
-		UI_SetVisible (1);
-		IN_Deactivate (true);
-		key_dest = key_menu;
 		UI_PushMenu ("ui/rml/menus/main_menu.rml");
-	}
 }
 
 static void UI_Show_f (void)
 {
 	/* Alias for opening the default menu. */
-	UI_SetVisible (1);
-	IN_Deactivate (true);
-	key_dest = key_menu;
 	UI_PushMenu ("ui/rml/menus/main_menu.rml");
 }
 
@@ -107,11 +99,6 @@ static void UI_Menu_f (void)
 		menu_path = "ui/rml/menus/main_menu.rml";  /* Default menu */
 	else
 		menu_path = Cmd_Argv (1);
-
-	/* Release mouse and set menu mode */
-	UI_SetVisible (1);
-	IN_Deactivate (true);
-	key_dest = key_menu;
 
 	/* Push the menu onto RmlUI's stack */
 	UI_PushMenu (menu_path);
