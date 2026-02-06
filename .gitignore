@@ -30,6 +30,7 @@ Misc/vq_pak/mkpak
 Misc/vq_pak/*.exe
 Misc/vq_pak/*.dSYM
 build/
+subprojects/.wraplock
 .settings
 .project
 .cproject

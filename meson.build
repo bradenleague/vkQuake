@@ -282,6 +282,7 @@ incdirs = [
 
 cxx = meson.get_compiler('cpp')
 cxxflags = ['-Wall', '-std=c++17']
+cmake = import('cmake')
 
 # RmlUI integration (optional)
 use_rmlui = get_option('use_rmlui')
@@ -318,14 +319,22 @@ if use_rmlui
         'Quake',
     )
 
-    # Link pre-built RmlUI static libraries (built by top-level CMake).
-    rmlui_lib_dir = join_paths(meson.project_source_root(), '..', 'build')
-    rmlui_lib = cxx.find_library('rmlui', required : true, dirs : rmlui_lib_dir)
-    rmlui_debugger_lib = cxx.find_library('rmlui_debugger', required : false, dirs : rmlui_lib_dir)
-    deps += rmlui_lib
-    if rmlui_debugger_lib.found()
-        deps += rmlui_debugger_lib
-    endif
+    # Build RmlUI via Meson's CMake bridge instead of a separate top-level CMake step.
+    rmlui_options = cmake.subproject_options()
+    rmlui_options.add_cmake_defines({
+        'BUILD_SHARED_LIBS': 'OFF',
+        'RMLUI_SAMPLES': 'OFF',
+        'RMLUI_LUA_BINDINGS': 'OFF',
+        'RMLUI_THIRDPARTY_CONTAINERS': 'ON',
+        'RMLUI_PRECOMPILED_HEADERS': 'OFF',
+        'CMAKE_POLICY_DEFAULT_CMP0156': 'NEW',
+        'CMAKE_POLICY_DEFAULT_CMP0179': 'NEW',
+    })
+    rmlui_subproj = cmake.subproject('rmlui', options: rmlui_options)
+    deps += [
+        rmlui_subproj.dependency('rmlui_core'),
+        rmlui_subproj.dependency('rmlui_debugger'),
+    ]
 
     freetype_dep = dependency('freetype2', required : true)
     deps += freetype_dep
@@ -337,7 +346,7 @@ endif
 
 # Build executable - include RmlUI directories if enabled
 if use_rmlui
-    executable('vkquake', [srcs, shaders_c, rmlui_srcs], dependencies : deps, include_directories : [incdirs, rmlui_incdir], c_args : cflags, cpp_args : cxxflags, c_pch: ['Quake/quakedef.h', 'Quake/quakedef.c'])
+    executable('vkquake', [srcs, shaders_c, rmlui_srcs], dependencies : deps, include_directories : [incdirs, rmlui_incdir], c_args : cflags, cpp_args : cxxflags, c_pch: 'Quake/quakedef.h')
 else
-    executable('vkquake', [srcs, shaders_c], dependencies : deps, include_directories : incdirs, c_args : cflags, c_pch: ['Quake/quakedef.h', 'Quake/quakedef.c'])
+    executable('vkquake', [srcs, shaders_c], dependencies : deps, include_directories : incdirs, c_args : cflags, c_pch: 'Quake/quakedef.h')
 endif

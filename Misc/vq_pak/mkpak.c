@@ -153,11 +153,18 @@ int main (int argc, char *argv[])
 		in_buffer = realloc (in_buffer, in_size);
 		fread (in_buffer, in_size, 1, in);
 
-		dpackfile_t pack_entry;
-		memset (&pack_entry, 0, sizeof (pack_entry));
-		strncpy (pack_entry.name, entry_path_start, sizeof (pack_entry.name) - 1);
-		pack_entry.filelen = (int)in_size;
-		pack_entry.filepos = file_offset;
+			dpackfile_t pack_entry;
+			memset (&pack_entry, 0, sizeof (pack_entry));
+			size_t entry_name_len = strlen (entry_path_start);
+			if (entry_name_len >= sizeof (pack_entry.name))
+			{
+				fprintf (stderr, "PAK entry path too long (%zu >= %zu): '%s'\n",
+						entry_name_len, sizeof (pack_entry.name), entry_path_start);
+				return 1;
+			}
+			memcpy (pack_entry.name, entry_path_start, entry_name_len + 1);
+			pack_entry.filelen = (int)in_size;
+			pack_entry.filepos = file_offset;
 
 		fseek (out, directory_offset + (file_index * sizeof (dpackfile_t)), SEEK_SET);
 		fwrite (&pack_entry, sizeof (pack_entry), 1, out);
