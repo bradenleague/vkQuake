@@ -24,7 +24,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "quakedef.h"
 #include "q_ctype.h"
 #ifdef USE_RMLUI
-#include "rmlui_bridge.h"
+#include "ui_manager.h"
 #endif
 #include <sys/stat.h>
 #ifndef _WIN32
@@ -836,8 +836,8 @@ static void Host_Map_f (void)
 	key_dest = key_game; // remove console or menu
 #ifdef USE_RMLUI
 	/* Close any open RmlUI menus so input returns to game */
-	while (RmlUI_WantsMenuInput ())
-		RmlUI_HandleEscape ();
+	while (UI_WantsMenuInput ())
+		UI_HandleEscape ();
 #endif
 	SCR_BeginLoadingPlaque ();
 

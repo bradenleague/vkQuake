@@ -32,7 +32,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "menu.h"
 
 #ifdef USE_RMLUI
-#include "rmlui_bridge.h"
+#include "ui_manager.h"
 #endif
 
 #ifdef USE_SDL3
@@ -2492,7 +2492,7 @@ static void GL_CreateRenderResources (void)
 	 * RmlUI's pipelines reference the current render pass. */
 	{
 		cb_context_t *gui_cbx = vulkan_globals.secondary_cb_contexts[SCBX_GUI];
-		rmlui_vulkan_config_t rmlui_config = {0};
+		ui_vulkan_config_t rmlui_config = {0};
 		rmlui_config.device = vulkan_globals.device;
 		rmlui_config.physical_device = vulkan_physical_device;
 		rmlui_config.graphics_queue = vulkan_globals.queue;
@@ -2512,7 +2512,7 @@ static void GL_CreateRenderResources (void)
 		rmlui_config.cmd_push_constants = vulkan_globals.vk_cmd_push_constants;
 		rmlui_config.cmd_set_scissor = vkCmdSetScissor;
 		rmlui_config.cmd_set_viewport = vkCmdSetViewport;
-		RmlUI_InitVulkan (&rmlui_config);
+		UI_InitializeVulkan (&rmlui_config);
 	}
 #endif
 }
@@ -2641,7 +2641,7 @@ void GL_BeginRenderingTask (void *unused)
 	R_CollectMeshBufferGarbage ();
 	TexMgr_CollectGarbage ();
 #ifdef USE_RMLUI
-	RmlUI_CollectGarbage ();
+	UI_CollectGarbage ();
 #endif
 
 	for (int pcbx_index = 0; pcbx_index < PCBX_NUM; ++pcbx_index)

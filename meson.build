@@ -85,27 +85,6 @@ run_mkpak = custom_target('run-mkpak',
   depfile : 'vkquake.pak.d',
   command: mkpak_command)
 
-# Copy UI assets into the build output for packaging/running
-py = import('python').find_installation()
-ui_src = join_paths(meson.project_source_root(), '..', 'ui')
-ui_dst = join_paths(meson.project_build_root(), 'ui')
-copy_ui_script = '''
-import os, shutil, sys
-src, dst, out = sys.argv[1], sys.argv[2], sys.argv[3]
-if not os.path.isdir(src):
-    print('UI source not found: ' + src, file=sys.stderr)
-    sys.exit(1)
-if os.path.exists(dst):
-    shutil.rmtree(dst)
-shutil.copytree(src, dst)
-with open(out, 'w') as f:
-    f.write('ok')
-'''
-copy_ui_assets = custom_target('copy-ui-assets',
-  output : 'ui_assets.stamp',
-  command : [py, '-c', copy_ui_script, ui_src, ui_dst, '@OUTPUT@'],
-  build_by_default : true)
-
 # Write the embedded pak into the build dir so Meson can track it.
 bintoc_compress_command = [bintoc, '-c', '@INPUT@', 'vkquake.pak', '@OUTPUT@']
 
@@ -329,8 +308,6 @@ if use_rmlui
         '../rmlui/infrastructure/quake_cvar_provider.cpp',
         '../rmlui/infrastructure/quake_command_executor.cpp',
         '../rmlui/infrastructure/quake_logger.cpp',
-        # Engine bridge
-        'Quake/rmlui_bridge.cpp',
     )
 
     # Add RmlUI shaders to the shaders list
@@ -349,33 +326,16 @@ if use_rmlui
         '../rmlui/domain',
         '../rmlui/domain/ports',
         '../rmlui/infrastructure',
+        'Quake',
     )
 
-    # Find RmlUI and freetype dependencies
-    # RmlUI can be built separately via CMake and linked as a library
-    # Or we can use pkg-config if installed system-wide
-    rmlui_dep = dependency('rmlui', required : false)
-    if rmlui_dep.found()
-        deps += rmlui_dep
-    else
-        # Try to find pre-built library from CMake build
-        # Use meson.project_source_root() for absolute paths
-        rmlui_lib_dirs = [
-            join_paths(meson.project_source_root(), '..', 'external', 'rmlui', 'build'),
-            join_paths(meson.project_source_root(), '..', 'build'),
-            join_paths(meson.project_source_root(), '..', 'build_test'),
-            join_paths(meson.project_source_root(), '..', 'cmake-build'),
-        ]
-        rmlui_lib = cxx.find_library('rmlui', required : false, dirs : rmlui_lib_dirs)
-        rmlui_debugger_lib = cxx.find_library('rmlui_debugger', required : false, dirs : rmlui_lib_dirs)
-        if rmlui_lib.found()
-            deps += rmlui_lib
-            if rmlui_debugger_lib.found()
-                deps += rmlui_debugger_lib
-            endif
-        else
-            warning('RmlUI library not found. Build external/rmlui first with CMake.')
-        endif
+    # Link pre-built RmlUI static libraries (built by top-level CMake).
+    rmlui_lib_dir = join_paths(meson.project_source_root(), '..', 'build')
+    rmlui_lib = cxx.find_library('rmlui', required : true, dirs : rmlui_lib_dir)
+    rmlui_debugger_lib = cxx.find_library('rmlui_debugger', required : false, dirs : rmlui_lib_dir)
+    deps += rmlui_lib
+    if rmlui_debugger_lib.found()
+        deps += rmlui_debugger_lib
     endif
 
     freetype_dep = dependency('freetype2', required : true)

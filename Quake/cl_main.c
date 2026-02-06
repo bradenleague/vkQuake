@@ -24,7 +24,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "quakedef.h"
 #include "bgmusic.h"
 #ifdef USE_RMLUI
-#include "rmlui_bridge.h"
+#include "ui_manager.h"
 #endif
 
 // we need to declare some mouse variables here, because the menu system
@@ -177,14 +177,14 @@ void CL_Disconnect (void)
 	// Clean up RmlUI HUD overlays on disconnect
 	{
 		extern cvar_t ui_use_rmlui_hud;
-		extern void Sbar_RmlUI_Reset(void);
+		extern void Sbar_UI_Reset(void);
 		if (ui_use_rmlui_hud.value)
 		{
-			RmlUI_HideHUD();
-			RmlUI_HideScoreboard();
-			RmlUI_HideIntermission();
+			UI_HideHUD();
+			UI_HideScoreboard();
+			UI_HideIntermission();
 		}
-		Sbar_RmlUI_Reset();
+		Sbar_UI_Reset();
 	}
 #endif
 

@@ -25,7 +25,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "in_sdl.h"
 
 #ifdef USE_RMLUI
-#include "rmlui_bridge.h"
+#include "ui_manager.h"
 #endif
 
 #ifndef USE_SDL3
@@ -137,7 +137,7 @@ void IN_SendKeyEvents (void)
 				vid.restart_next_frame = true;
 				Cvar_FindVar ("scr_conscale")->callback (NULL);
 #ifdef USE_RMLUI
-				RmlUI_Resize (event.window.data1, event.window.data2);
+				UI_Resize (event.window.data1, event.window.data2);
 #endif
 			}
 			break;
@@ -147,13 +147,13 @@ void IN_SendKeyEvents (void)
 
 #ifdef USE_RMLUI
 			/* Forward text input to RmlUI when menu is active */
-			if (RmlUI_WantsMenuInput() || RmlUI_IsMenuVisible())
+			if (UI_WantsMenuInput() || UI_IsMenuVisible())
 			{
 				unsigned char *ch;
 				for (ch = (unsigned char *)event.text.text; *ch; ch++)
 				{
 					if ((*ch & ~0x7F) == 0)
-						RmlUI_CharEvent (*ch);
+						UI_CharEvent (*ch);
 				}
 				break;  /* Don't pass to Quake */
 			}
@@ -177,21 +177,21 @@ void IN_SendKeyEvents (void)
 
 #ifdef USE_RMLUI
 			/* Check if RmlUI is capturing a key for key binding */
-			if (RmlUI_IsCapturingKey() && down)
+			if (UI_IsCapturingKey() && down)
 			{
 				/* Get Quake key name and send to RmlUI */
 				int qkey = IN_SDL_ScancodeToQuakeKey (event.key.keysym.scancode);
 				const char* keyname = Key_KeynumToString(qkey);
-				RmlUI_OnKeyCaptured(qkey, keyname);
+				UI_OnKeyCaptured(qkey, keyname);
 				break;  /* Consumed by key capture */
 			}
 
 			/* Forward key events to RmlUI if it wants menu input
 			 * EXCEPT for escape key which is handled by keys.c for proper
 			 * menu stack navigation */
-			if ((RmlUI_WantsMenuInput() || RmlUI_IsMenuVisible()) && event.key.keysym.sym != SDLK_ESCAPE)
+			if ((UI_WantsMenuInput() || UI_IsMenuVisible()) && event.key.keysym.sym != SDLK_ESCAPE)
 			{
-				if (RmlUI_KeyEvent (event.key.keysym.sym, event.key.keysym.scancode, down, event.key.repeat))
+				if (UI_KeyEvent (event.key.keysym.sym, event.key.keysym.scancode, down, event.key.repeat))
 					break;  /* Consumed by RmlUI */
 			}
 #endif
@@ -208,11 +208,11 @@ void IN_SendKeyEvents (void)
 		case SDL_MOUSEBUTTONUP:
 #ifdef USE_RMLUI
 			/* When RmlUI wants input, it consumes all mouse button events. */
-			if (RmlUI_WantsMenuInput() || RmlUI_IsMenuVisible())
+			if (UI_WantsMenuInput() || UI_IsMenuVisible())
 			{
 				if (in_debugkeys.value)
 					Con_Printf ("SDL mouse button %d state %d (RmlUI wants=1)\n", event.button.button, event.button.state);
-				RmlUI_MouseButton (event.button.button, event.button.state == SDL_PRESSED);
+				UI_MouseButton (event.button.button, event.button.state == SDL_PRESSED);
 				break;  /* Consumed by RmlUI */
 			}
 #endif
@@ -227,9 +227,9 @@ void IN_SendKeyEvents (void)
 		case SDL_MOUSEWHEEL:
 #ifdef USE_RMLUI
 			/* When RmlUI wants input, it consumes all wheel events. */
-			if (RmlUI_WantsMenuInput() || RmlUI_IsMenuVisible())
+			if (UI_WantsMenuInput() || UI_IsMenuVisible())
 			{
-				RmlUI_MouseScroll ((float)event.wheel.x, (float)event.wheel.y);
+				UI_MouseScroll ((float)event.wheel.x, (float)event.wheel.y);
 				break;  /* Consumed by RmlUI */
 			}
 #endif
@@ -248,9 +248,9 @@ void IN_SendKeyEvents (void)
 		case SDL_MOUSEMOTION:
 #ifdef USE_RMLUI
 			/* Always update RmlUI cursor position for hover effects */
-			RmlUI_MouseMove (event.motion.x, event.motion.y, event.motion.xrel, event.motion.yrel);
+			UI_MouseMove (event.motion.x, event.motion.y, event.motion.xrel, event.motion.yrel);
 			/* Don't pass motion to game when RmlUI menu is active */
-			if (RmlUI_WantsMenuInput() || RmlUI_IsMenuVisible())
+			if (UI_WantsMenuInput() || UI_IsMenuVisible())
 				break;
 #endif
 			IN_MouseMotion (event.motion.xrel, event.motion.yrel);
@@ -301,7 +301,7 @@ static int SDLCALL IN_FilterMouseEvents (const SDL_Event *event)
 {
 #ifdef USE_RMLUI
 	/* Don't filter mouse events when RmlUI menu needs them */
-	if (RmlUI_WantsMenuInput() || RmlUI_IsMenuVisible())
+	if (UI_WantsMenuInput() || UI_IsMenuVisible())
 		return 1;
 #endif
 

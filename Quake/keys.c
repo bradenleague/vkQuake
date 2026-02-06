@@ -25,7 +25,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "arch_def.h"
 
 #ifdef USE_RMLUI
-#include "rmlui_bridge.h"
+#include "ui_manager.h"
 extern cvar_t ui_use_rmlui_menus;
 #endif
 
@@ -1002,11 +1002,11 @@ void Key_EventWithKeycode (int key, qboolean down, int keycode)
 
 #ifdef USE_RMLUI
 		// Let RmlUI handle escape first if it has an active menu
-		if (RmlUI_WantsMenuInput())
+		if (UI_WantsMenuInput())
 		{
-			RmlUI_HandleEscape();
+			UI_HandleEscape();
 			// If RmlUI no longer wants input, return control to game
-			if (!RmlUI_WantsMenuInput())
+			if (!UI_WantsMenuInput())
 			{
 				IN_Activate();
 				key_dest = key_game;
@@ -1039,9 +1039,9 @@ void Key_EventWithKeycode (int key, qboolean down, int keycode)
 				key_dest = key_menu;
 				/* Show pause menu if in-game, main menu otherwise */
 				if (sv.active)
-					RmlUI_PushMenu ("ui/rml/menus/pause_menu.rml");
+					UI_PushMenu ("ui/rml/menus/pause_menu.rml");
 				else
-					RmlUI_PushMenu ("ui/rml/menus/main_menu.rml");
+					UI_PushMenu ("ui/rml/menus/main_menu.rml");
 			}
 			else
 #endif

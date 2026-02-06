@@ -24,7 +24,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "bgmusic.h"
 
 #ifdef USE_RMLUI
-#include "rmlui_bridge.h"
+#include "ui_manager.h"
 extern cvar_t ui_use_rmlui_menus;
 #endif
 
@@ -655,7 +655,7 @@ void M_Menu_Main_f (void)
 	{
 		IN_Deactivate (true);
 		key_dest = key_menu;
-		RmlUI_PushMenu("ui/rml/menus/main_menu.rml");
+		UI_PushMenu("ui/rml/menus/main_menu.rml");
 		return;
 	}
 #endif
@@ -2247,7 +2247,7 @@ void M_Menu_Options_f (void)
 	{
 		IN_Deactivate (true);
 		key_dest = key_menu;
-		RmlUI_PushMenu("ui/rml/menus/options.rml");
+		UI_PushMenu("ui/rml/menus/options.rml");
 		return;
 	}
 #endif

@@ -30,7 +30,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <setjmp.h>
 
 #ifdef USE_RMLUI
-#include "rmlui_bridge.h"
+#include "ui_manager.h"
 extern cvar_t ui_use_rmlui_hud;
 #endif
 
@@ -1214,10 +1214,10 @@ static void SCR_DrawGUI (void *unused)
 #ifdef USE_RMLUI
 	/* Render RmlUI overlay on top of Quake GUI */
 	R_BeginDebugUtilsLabel (cbx, "RmlUI");
-	RmlUI_BeginFrame (cbx->cb, vid.width, vid.height);
-	RmlUI_Update (host_frametime);
-	RmlUI_Render ();
-	RmlUI_EndFrame ();
+	UI_BeginFrame (cbx->cb, vid.width, vid.height);
+	UI_Update (host_frametime);
+	UI_Render ();
+	UI_EndFrame ();
 	R_EndDebugUtilsLabel (cbx);
 #endif
 
@@ -1288,7 +1288,7 @@ void SCR_UpdateScreen (qboolean use_tasks)
 	// Process pending RmlUI operations on the main thread BEFORE any rendering
 	// tasks are created. This prevents race conditions between UI state changes
 	// and rendering on worker threads.
-	RmlUI_ProcessPending ();
+	UI_ProcessPending ();
 #endif
 
 	// decide on the height of the console

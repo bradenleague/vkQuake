@@ -22,7 +22,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "quakedef.h"
 
 #ifdef USE_RMLUI
-#include "rmlui_bridge.h"
+#include "ui_manager.h"
 #endif
 #include "sys.h"
 
@@ -739,7 +739,7 @@ void CL_PlayDemo_f (void)
 	// get rid of the menu and/or console
 #ifdef USE_RMLUI
 	// Keep menu focus if RmlUI menus are active (demos can run in background).
-	if (!RmlUI_WantsMenuInput())
+	if (!UI_WantsMenuInput())
 #endif
 	{
 		key_dest = key_game;

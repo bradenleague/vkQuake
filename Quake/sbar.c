@@ -70,7 +70,7 @@ extern cvar_t scr_style;
 
 #ifdef USE_RMLUI
 extern cvar_t ui_use_rmlui_hud;
-#include "rmlui_bridge.h"
+#include "ui_manager.h"
 static qboolean rmlui_hud_shown = false;
 #endif
 
@@ -107,7 +107,7 @@ void Sbar_ShowScores (void)
 	sb_showscores = true;
 #ifdef USE_RMLUI
 	if (ui_use_rmlui_hud.value)
-		RmlUI_ShowScoreboard();
+		UI_ShowScoreboard();
 #endif
 }
 
@@ -124,12 +124,12 @@ void Sbar_DontShowScores (void)
 	sb_showscores = false;
 #ifdef USE_RMLUI
 	if (ui_use_rmlui_hud.value)
-		RmlUI_HideScoreboard();
+		UI_HideScoreboard();
 #endif
 }
 
 #ifdef USE_RMLUI
-void Sbar_RmlUI_Reset(void)
+void Sbar_UI_Reset(void)
 {
 	rmlui_hud_shown = false;
 }
@@ -1294,18 +1294,18 @@ void Sbar_Draw (cb_context_t *cbx)
 	if (ui_use_rmlui_hud.value && cl.worldmodel && cls.signon == SIGNONS && !cls.demoplayback)
 	{
 		if (!rmlui_hud_shown) {
-			RmlUI_ShowHUD(NULL);  // NULL = default hud_classic.rml
+			UI_ShowHUD(NULL);  // NULL = default hud_classic.rml
 			rmlui_hud_shown = true;
 		}
 		// Sync game state to RmlUI data model
-		RmlUI_SyncGameState(cl.stats, cl.items, cl.intermission, cl.gametype,
-		                    cl.levelname, cl.mapname, cl.time);
+		UI_SyncGameState(cl.stats, cl.items, cl.intermission, cl.gametype,
+		                    cl.maxclients, cl.levelname, cl.mapname, cl.time);
 		return;
 	}
 	else if (rmlui_hud_shown)
 	{
 		// Cvar was toggled off - hide RmlUI HUD
-		RmlUI_HideHUD();
+		UI_HideHUD();
 		rmlui_hud_shown = false;
 	}
 #endif

@@ -31,7 +31,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #endif
 
 #ifdef USE_RMLUI
-#include "rmlui_bridge.h"
+#include "ui_manager.h"
 
 /* Cvars to enable RmlUI components */
 cvar_t ui_use_rmlui = {"ui_use_rmlui", "0", CVAR_ARCHIVE};        /* Master switch */
@@ -66,24 +66,24 @@ static void UI_ComponentCvarChanged (cvar_t *var)
 static void UI_Toggle_f (void)
 {
 	/* Toggle the menu stack (more useful than toggling visibility with no menus open). */
-	if (RmlUI_WantsMenuInput ())
+	if (UI_WantsMenuInput ())
 		UI_CloseMenu_f ();
 	else
 	{
-		RmlUI_SetVisible (1);
+		UI_SetVisible (1);
 		IN_Deactivate (true);
 		key_dest = key_menu;
-		RmlUI_PushMenu ("ui/rml/menus/main_menu.rml");
+		UI_PushMenu ("ui/rml/menus/main_menu.rml");
 	}
 }
 
 static void UI_Show_f (void)
 {
 	/* Alias for opening the default menu. */
-	RmlUI_SetVisible (1);
+	UI_SetVisible (1);
 	IN_Deactivate (true);
 	key_dest = key_menu;
-	RmlUI_PushMenu ("ui/rml/menus/main_menu.rml");
+	UI_PushMenu ("ui/rml/menus/main_menu.rml");
 }
 
 static void UI_Hide_f (void)
@@ -94,7 +94,7 @@ static void UI_Hide_f (void)
 
 static void UI_Debugger_f (void)
 {
-	RmlUI_ToggleDebugger ();
+	UI_ToggleDebugger ();
 	Con_Printf ("RmlUI debugger toggled\n");
 }
 
@@ -109,28 +109,28 @@ static void UI_Menu_f (void)
 		menu_path = Cmd_Argv (1);
 
 	/* Release mouse and set menu mode */
-	RmlUI_SetVisible (1);
+	UI_SetVisible (1);
 	IN_Deactivate (true);
 	key_dest = key_menu;
 
 	/* Push the menu onto RmlUI's stack */
-	RmlUI_PushMenu (menu_path);
+	UI_PushMenu (menu_path);
 }
 
 /* Close all RmlUI menus and return to game */
 static void UI_CloseMenu_f (void)
 {
 	/* Pop all menus */
-	while (RmlUI_WantsMenuInput ())
-		RmlUI_HandleEscape ();
+	while (UI_WantsMenuInput ())
+		UI_HandleEscape ();
 
 	/* Restore game input */
-	if (!RmlUI_WantsMenuInput ())
+	if (!UI_WantsMenuInput ())
 	{
 		IN_Activate ();
 		key_dest = key_game;
-		if (!RmlUI_IsHUDVisible ())
-			RmlUI_SetVisible (0);
+		if (!UI_IsHUDVisible ())
+			UI_SetVisible (0);
 	}
 }
 #endif
@@ -1209,8 +1209,8 @@ void Host_Init (void)
 		SaveList_Init ();
 #ifdef USE_RMLUI
 		/* Initialize RmlUI core BEFORE VID_Init so the render interface exists
-		 * when RmlUI_InitVulkan is called from GL_InitDevice */
-		RmlUI_Init (1280, 720, com_basedir);  /* Initial size, will resize after VID_Init */
+		 * when UI_InitializeVulkan is called from GL_InitDevice */
+		UI_Init (1280, 720, com_basedir);  /* Initial size, will resize after VID_Init */
 		/* Register cvars and console commands for RmlUI */
 		Cvar_RegisterVariable (&ui_use_rmlui);
 		Cvar_RegisterVariable (&ui_use_rmlui_hud);
@@ -1229,7 +1229,7 @@ void Host_Init (void)
 		VID_Init ();
 #ifdef USE_RMLUI
 		/* Resize RmlUI context to actual window size */
-		RmlUI_Resize (vid.width, vid.height);
+		UI_Resize (vid.width, vid.height);
 #endif
 		IN_Init ();
 		TexMgr_Init (); // johnfitz
@@ -1305,7 +1305,7 @@ void Host_Shutdown (void)
 		CDAudio_Shutdown ();
 		S_Shutdown ();
 #ifdef USE_RMLUI
-		RmlUI_Shutdown ();
+		UI_Shutdown ();
 #endif
 		IN_Shutdown ();
 		VID_Shutdown ();
