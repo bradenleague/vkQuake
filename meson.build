@@ -288,8 +288,8 @@ cmake = import('cmake')
 use_rmlui = get_option('use_rmlui')
 rmlui_srcs = []
 if use_rmlui
-    cflags += '-DUSE_RMLUI'
-    cxxflags += '-DUSE_RMLUI'
+    cflags += ['-DUSE_RMLUI', '-DTATOOSH_HOT_RELOAD']
+    cxxflags += ['-DUSE_RMLUI', '-DTATOOSH_HOT_RELOAD']
 
     # RmlUI sources
     rmlui_srcs = files(

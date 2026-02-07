@@ -90,6 +90,16 @@ static void UI_Debugger_f (void)
 	Con_Printf ("RmlUI debugger toggled\n");
 }
 
+static void UI_Reload_f (void)
+{
+	UI_ReloadDocuments ();
+}
+
+static void UI_ReloadCSS_f (void)
+{
+	UI_ReloadStyleSheets ();
+}
+
 /* Open an RmlUI menu - sets key_dest and captures mouse */
 static void UI_Menu_f (void)
 {
@@ -1212,6 +1222,8 @@ void Host_Init (void)
 		Cmd_AddCommand ("ui_debuger", UI_Debugger_f);
 		Cmd_AddCommand ("ui_menu", UI_Menu_f);
 		Cmd_AddCommand ("ui_closemenu", UI_CloseMenu_f);
+		Cmd_AddCommand ("ui_reload", UI_Reload_f);
+		Cmd_AddCommand ("ui_reload_css", UI_ReloadCSS_f);
 #endif
 		VID_Init ();
 #ifdef USE_RMLUI
