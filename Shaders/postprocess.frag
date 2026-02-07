@@ -10,6 +10,7 @@ layout (push_constant) uniform PushConsts
 	float chromatic_strength;
 	float ui_offset_x;
 	float ui_offset_y;
+	float ui_opacity;
 }
 push_constants;
 
@@ -69,8 +70,9 @@ void main ()
 		ui = texture (ui_texture, ui_uv);
 	}
 
-	// Composite: UI buffer is premultiplied alpha (blended onto transparent black)
-	vec3 frag = game * (1.0 - ui.a) + ui.rgb;
+	// Composite: UI buffer is premultiplied alpha, scaled by opacity (scr_sbaralpha)
+	float opacity = clamp (push_constants.ui_opacity, 0.1, 1.0);
+	vec3 frag = game * (1.0 - ui.a * opacity) + ui.rgb * opacity;
 
 	// Gamma and contrast
 	frag = frag * push_constants.contrast;
