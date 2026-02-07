@@ -303,6 +303,7 @@ if use_rmlui
         '../rmlui/internal/quake_cvar_provider.cpp',
         '../rmlui/internal/quake_command_executor.cpp',
         '../rmlui/internal/notification_model.cpp',
+        '../rmlui/internal/vk_allocator.cpp',
     )
 
     # Add RmlUI shaders to the shaders list
