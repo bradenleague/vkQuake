@@ -34,9 +34,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "ui_manager.h"
 
 /* Cvars to enable RmlUI components */
-cvar_t ui_use_rmlui = {"ui_use_rmlui", "0", CVAR_ARCHIVE};        /* Master switch */
+cvar_t ui_use_rmlui = {"ui_use_rmlui", "1", CVAR_ARCHIVE};        /* Master switch */
 cvar_t ui_use_rmlui_hud = {"ui_use_rmlui_hud", "0", CVAR_ARCHIVE};     /* Use RmlUI HUD */
-cvar_t ui_use_rmlui_menus = {"ui_use_rmlui_menus", "0", CVAR_ARCHIVE}; /* Use RmlUI menus */
+cvar_t ui_use_rmlui_menus = {"ui_use_rmlui_menus", "1", CVAR_ARCHIVE}; /* Use RmlUI menus */
 
 static qboolean ui_syncing_cvars = false;
 
