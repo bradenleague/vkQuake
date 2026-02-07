@@ -97,6 +97,7 @@ cvar_t scr_clock = {"scr_clock", "0", CVAR_NONE};
 cvar_t scr_autoclock = {"scr_autoclock", "1", CVAR_ARCHIVE};
 cvar_t scr_usekfont = {"scr_usekfont", "0", CVAR_NONE}; // 2021 re-release
 cvar_t scr_style = {"scr_style", "0", CVAR_ARCHIVE};
+cvar_t scr_uiscale = {"scr_uiscale", "1", CVAR_ARCHIVE};
 
 cvar_t scr_viewsize = {"viewsize", "100", CVAR_ARCHIVE};
 cvar_t scr_viewsize_allow_shrinking = {"viewsize_allow_shrinking", "0", CVAR_ARCHIVE};
@@ -625,6 +626,7 @@ void SCR_Init (void)
 	Cvar_RegisterVariable (&scr_centertime);
 	Cvar_RegisterVariable (&scr_printspeed);
 	Cvar_RegisterVariable (&scr_style);
+	Cvar_RegisterVariable (&scr_uiscale);
 	Cvar_RegisterVariable (&cl_gun_fovscale);
 
 	Cvar_RegisterVariable (&scr_relativescale);
