@@ -86,6 +86,10 @@ static qboolean vid_locked = false; // johnfitz
 static qboolean vid_changed = false;
 
 static void VID_Menu_Init (void); // johnfitz
+static void VID_Menu_ChooseNextMode (int dir);
+static void VID_Menu_ChooseNextRate (int dir);
+static void VID_Menu_ChooseNextFullScreenMode (int dir);
+static void VID_Menu_ChooseNextVSyncMode (int dir);
 static void VID_Restart (qboolean set_mode);
 static void VID_Restart_f (void);
 
@@ -3655,6 +3659,41 @@ static void R_CreatePaletteOctreeBuffers (uint32_t *colors, int num_colors, pale
 
 /*
 ===================
+VID_NextMode_f / VID_PrevMode_f -- tatoosh -- console commands for RmlUI video picker
+===================
+*/
+static void VID_NextMode_f (void)
+{
+	VID_Menu_ChooseNextMode (1);
+}
+
+static void VID_PrevMode_f (void)
+{
+	VID_Menu_ChooseNextMode (-1);
+}
+
+static void VID_NextRate_f (void)
+{
+	VID_Menu_ChooseNextRate (1);
+}
+
+static void VID_PrevRate_f (void)
+{
+	VID_Menu_ChooseNextRate (-1);
+}
+
+static void VID_NextFullScreen_f (void)
+{
+	VID_Menu_ChooseNextFullScreenMode (1);
+}
+
+static void VID_NextVSync_f (void)
+{
+	VID_Menu_ChooseNextVSyncMode (1);
+}
+
+/*
+===================
 VID_Init
 ===================
 */
@@ -3700,6 +3739,12 @@ void VID_Init (void)
 	Cmd_AddCommand ("vid_test", VID_Test);		   // johnfitz
 	Cmd_AddCommand ("vid_describecurrentmode", VID_DescribeCurrentMode_f);
 	Cmd_AddCommand ("vid_describemodes", VID_DescribeModes_f);
+	Cmd_AddCommand ("vid_nextmode", VID_NextMode_f);
+	Cmd_AddCommand ("vid_prevmode", VID_PrevMode_f);
+	Cmd_AddCommand ("vid_nextrate", VID_NextRate_f);
+	Cmd_AddCommand ("vid_prevrate", VID_PrevRate_f);
+	Cmd_AddCommand ("vid_nextfullscreen", VID_NextFullScreen_f);
+	Cmd_AddCommand ("vid_nextvsync", VID_NextVSync_f);
 
 #ifdef _DEBUG
 	Cmd_AddCommand ("create_palette_octree", CreatePaletteOctree_f);
