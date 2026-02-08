@@ -394,6 +394,43 @@ static void Host_Mods_f (void)
 		Con_SafePrintf ("no mods found\n");
 }
 
+#ifdef USE_RMLUI
+/*
+================
+M_SyncModsToUI
+
+Pushes current mod directory list to RmlUI for the mods menu.
+================
+*/
+void M_SyncModsToUI (void)
+{
+	enum
+	{
+		MAX_UI_MODS = 256
+	};
+	ui_mod_info_t   mods[MAX_UI_MODS];
+	char			names[MAX_UI_MODS][32];
+	filelist_item_t *mod;
+	int				count = 0;
+
+	Modlist_Init ();
+
+	for (mod = modlist; mod && count < MAX_UI_MODS; mod = mod->next)
+	{
+		// Skip internal helper directories that are not runnable gamedirs.
+		if (!mod->name[0] || mod->name[0] == '.' || !q_strcasecmp (mod->name, "ui"))
+			continue;
+
+		q_strlcpy (names[count], mod->name, sizeof (names[count]));
+		mods[count].name = names[count];
+		mods[count].display_name = names[count];
+		count++;
+	}
+
+	UI_SyncMods (mods, count);
+}
+#endif
+
 //==============================================================================
 
 /*
