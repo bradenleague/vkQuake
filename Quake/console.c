@@ -1121,31 +1121,36 @@ void Con_DrawNotify (cb_context_t *cbx)
 
 	if (key_dest == key_message)
 	{
-		if (chat_team)
+#ifdef USE_RMLUI
+		if (!ui_use_rmlui_hud.value)
+#endif
 		{
-			Draw_String (cbx, 8, v, "say_team:");
-			x = 11;
-		}
-		else
-		{
-			Draw_String (cbx, 8, v, "say:");
-			x = 6;
-		}
+			if (chat_team)
+			{
+				Draw_String (cbx, 8, v, "say_team:");
+				x = 11;
+			}
+			else
+			{
+				Draw_String (cbx, 8, v, "say:");
+				x = 6;
+			}
 
-		text = Key_GetChatBuffer ();
-		i = Key_GetChatMsgLen ();
-		if (i > con_linewidth - x - 1)
-			text += i - con_linewidth + x + 1;
+			text = Key_GetChatBuffer ();
+			i = Key_GetChatMsgLen ();
+			if (i > con_linewidth - x - 1)
+				text += i - con_linewidth + x + 1;
 
-		while (*text)
-		{
-			Draw_Character (cbx, x << 3, v, *text);
-			x++;
-			text++;
+			while (*text)
+			{
+				Draw_Character (cbx, x << 3, v, *text);
+				x++;
+				text++;
+			}
+
+			Draw_Character (cbx, x << 3, v, 10 + ((int)(realtime * con_cursorspeed) & 1));
+			v += 8;
 		}
-
-		Draw_Character (cbx, x << 3, v, 10 + ((int)(realtime * con_cursorspeed) & 1));
-		v += 8;
 	}
 }
 
