@@ -3735,7 +3735,7 @@ static void R_CreatePaletteOctreeBuffers (uint32_t *colors, int num_colors, pale
 
 /*
 ===================
-VID_NextMode_f / VID_PrevMode_f -- tatoosh -- console commands for RmlUI video picker
+VID_NextMode_f / VID_PrevMode_f -- console commands for RmlUI video picker
 ===================
 */
 static void VID_NextMode_f (void)
