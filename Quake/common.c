@@ -2547,6 +2547,12 @@ static void COM_Game_f (void)
 			Draw_NewGame ();
 			R_NewGame ();
 			M_NewGame ();
+#ifdef USE_RMLUI
+			{
+				extern void UI_NotifyGameChanged (void);
+				UI_NotifyGameChanged ();
+			}
+#endif
 		}
 		ExtraMaps_NewGame ();
 		Host_Resetdemos ();

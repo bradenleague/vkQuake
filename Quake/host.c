@@ -42,12 +42,16 @@ static qboolean ui_syncing_cvars = false;
 static qboolean ui_show_pending_main_menu = false;
 static double ui_show_pending_since = 0.0;
 static double ui_startup_settle_until = 0.0;
+static qboolean ui_auto_menu_checked = false;
+static double ui_auto_menu_after = 0.0; /* earliest realtime to run auto-detect */
 #define UI_STARTUP_SETTLE_SECS  0.8  /* total time startup suppression is active */
 #define UI_STARTUP_FADE_SECS    0.3  /* tail fade-out duration within settle window */
+#define UI_AUTO_MENU_DELAY      0.1  /* seconds after init/game-change before auto-detect */
 
 static void UI_CloseMenu_f (void);
 static qboolean UI_IsMainMenuShowReady (void);
 static void UI_TryOpenPendingMainMenu (void);
+static void UI_AutoShowMainMenuIfIdle (void);
 static void UI_ShowWhenReady_f (void);
 static void UI_QueueMainMenuShow (void);
 int UI_IsMainMenuStartupPending (void);
@@ -146,6 +150,11 @@ static void UI_CloseMenu_f (void)
 
 static qboolean UI_IsMainMenuShowReady (void)
 {
+	/* If disconnected with no world loaded (e.g. mod with no startdemos, or
+	 * demos that failed to load), there's nothing to wait for. */
+	if (cls.state != ca_connected && !cl.worldmodel && !scr_disabled_for_loading)
+		return true;
+
 	/* Wait for gameplay view AND for the startup console to finish retracting. */
 	return cls.state == ca_connected && cls.signon == SIGNONS && cl.worldmodel && !scr_disabled_for_loading && !con_forcedup && scr_con_current <= 1.0f;
 }
@@ -208,6 +217,41 @@ static void UI_TryOpenPendingMainMenu (void)
 	ui_startup_settle_until = realtime + UI_STARTUP_SETTLE_SECS;
 	UI_SetStartupMenuEnter ();
 	UI_PushMenu ("ui/rml/menus/main_menu.rml");
+}
+
+/* Auto-detect when engine is idle at startup or after a game-directory change
+ * (e.g. third-party mod whose quake.rc has no startdemos / ui_show_when_ready)
+ * and queue the main menu so the user doesn't land on a raw console. */
+static void UI_AutoShowMainMenuIfIdle (void)
+{
+	if (ui_auto_menu_checked)
+		return;
+	if (!ui_use_rmlui_menus.value)
+		return;
+	if (realtime < ui_auto_menu_after)
+		return; /* let startup / game-change commands settle */
+
+	ui_auto_menu_checked = true;
+
+	if (ui_show_pending_main_menu)
+		return; /* already queued via ui_show_when_ready */
+	if (UI_WantsMenuInput ())
+		return; /* menu already open */
+	if (cls.state == ca_connected)
+		return; /* connected to server or playing demo */
+	if (sv.active)
+		return; /* hosting a server */
+
+	Con_DPrintf ("UI_AutoShowMainMenuIfIdle: no demo/server active, opening menu\n");
+	UI_QueueMainMenuShow ();
+}
+
+/* Called from COM_Game_f when the game directory changes so the auto-detect
+ * can re-evaluate after the new mod's quake.rc runs. */
+void UI_NotifyGameChanged (void)
+{
+	ui_auto_menu_checked = false;
+	ui_auto_menu_after = realtime + UI_AUTO_MENU_DELAY;
 }
 
 int UI_IsMainMenuStartupPending (void)
@@ -1175,6 +1219,7 @@ void _Host_Frame (double time)
 		CL_ReadFromServer ();
 
 #ifdef USE_RMLUI
+	UI_AutoShowMainMenuIfIdle ();
 	UI_TryOpenPendingMainMenu ();
 #endif
 
@@ -1329,6 +1374,7 @@ void Host_Init (void)
 		Cmd_AddCommand ("ui_closemenu", UI_CloseMenu_f);
 		Cmd_AddCommand ("ui_reload", UI_Reload_f);
 		Cmd_AddCommand ("ui_reload_css", UI_ReloadCSS_f);
+		ui_auto_menu_after = realtime + UI_AUTO_MENU_DELAY;
 #endif
 		VID_Init ();
 #ifdef USE_RMLUI
