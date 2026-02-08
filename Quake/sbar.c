@@ -1298,7 +1298,7 @@ void Sbar_Draw (cb_context_t *cbx)
 			rmlui_hud_shown = true;
 		}
 		// Sync game state to RmlUI data model
-		UI_SyncGameState(cl.stats, cl.items, cl.intermission, cl.gametype,
+		UI_SyncGameState(cl.stats, MAX_CL_STATS, cl.items, cl.intermission, cl.gametype,
 		                    cl.maxclients, cl.levelname, cl.mapname, cl.time);
 
 		// Sync scoreboard player data in deathmatch or when scoreboard visible

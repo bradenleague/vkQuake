@@ -1233,7 +1233,7 @@ static void SCR_DrawGUI (void *unused)
 			Sbar_IntermissionOverlay (cbx);
 #ifdef USE_RMLUI
 		if (ui_use_rmlui_hud.value)
-			UI_SyncGameState(cl.stats, cl.items, cl.intermission, cl.gametype,
+			UI_SyncGameState(cl.stats, MAX_CL_STATS, cl.items, cl.intermission, cl.gametype,
 			                 cl.maxclients, cl.levelname, cl.mapname, cl.time);
 #endif
 	}
@@ -1248,7 +1248,7 @@ static void SCR_DrawGUI (void *unused)
 #ifdef USE_RMLUI
 		}
 		if (ui_use_rmlui_hud.value)
-			UI_SyncGameState(cl.stats, cl.items, cl.intermission, cl.gametype,
+			UI_SyncGameState(cl.stats, MAX_CL_STATS, cl.items, cl.intermission, cl.gametype,
 			                 cl.maxclients, cl.levelname, cl.mapname, cl.time);
 #endif
 	}
