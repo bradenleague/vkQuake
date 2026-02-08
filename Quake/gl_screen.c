@@ -1202,7 +1202,10 @@ static void SCR_DrawGUI (void *unused)
 	}
 	else if (cl.intermission == 1 && key_dest == key_game) // end of level
 	{
-		Sbar_IntermissionOverlay (cbx);
+#ifdef USE_RMLUI
+		if (!ui_use_rmlui_hud.value)
+#endif
+			Sbar_IntermissionOverlay (cbx);
 #ifdef USE_RMLUI
 		if (ui_use_rmlui_hud.value)
 			UI_SyncGameState(cl.stats, cl.items, cl.intermission, cl.gametype,
@@ -1211,9 +1214,14 @@ static void SCR_DrawGUI (void *unused)
 	}
 	else if (cl.intermission == 2 && key_dest == key_game) // end of episode
 	{
-		Sbar_FinaleOverlay (cbx);
-		SCR_CheckDrawCenterString (cbx);
 #ifdef USE_RMLUI
+		if (!ui_use_rmlui_hud.value)
+		{
+#endif
+			Sbar_FinaleOverlay (cbx);
+			SCR_CheckDrawCenterString (cbx);
+#ifdef USE_RMLUI
+		}
 		if (ui_use_rmlui_hud.value)
 			UI_SyncGameState(cl.stats, cl.items, cl.intermission, cl.gametype,
 			                 cl.maxclients, cl.levelname, cl.mapname, cl.time);
