@@ -2593,6 +2593,7 @@ static void GL_CreateRenderResources (void)
 		rmlui_config.cmd_set_scissor = vkCmdSetScissor;
 		rmlui_config.cmd_set_viewport = vkCmdSetViewport;
 		UI_InitializeVulkan (&rmlui_config);
+		UI_SetPixelRatio (VID_GetPixelRatio ());
 	}
 #endif
 }
