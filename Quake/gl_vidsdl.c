@@ -328,6 +328,31 @@ Returns display DPI as a multiplier relative to 96 DPI baseline.
 Accounts for platform compositor scaling to avoid double-counting.
 ====================
 */
+/*
+====================
+VID_GetPixelRatio
+Returns physical-to-logical pixel ratio (e.g. 2.0 on macOS Retina).
+====================
+*/
+float VID_GetPixelRatio (void)
+{
+	if (!draw_context)
+		return 1.0f;
+
+	int logical_w = 0, drawable_w = 0, dummy = 0;
+	SDL_GetWindowSize (draw_context, &logical_w, &dummy);
+#ifdef USE_SDL3
+	SDL_GetWindowSizeInPixels (draw_context, &drawable_w, &dummy);
+#else
+	SDL_Vulkan_GetDrawableSize (draw_context, &drawable_w, &dummy);
+#endif
+
+	if (logical_w > 0)
+		return (float)drawable_w / (float)logical_w;
+
+	return 1.0f;
+}
+
 float VID_GetDisplayDPIScale (void)
 {
 	if (!draw_context)

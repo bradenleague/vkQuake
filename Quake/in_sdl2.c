@@ -24,6 +24,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "quakedef.h"
 #include "in_sdl.h"
 
+#if defined(SDL_FRAMEWORK) || defined(NO_SDL_CONFIG)
+#include <SDL2/SDL_vulkan.h>
+#else
+#include "SDL_vulkan.h"
+#endif
+
 #ifdef USE_RMLUI
 #include "ui_manager.h"
 #endif
@@ -141,12 +147,27 @@ void IN_SendKeyEvents (void)
 			}
 			else if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
 			{
-				vid.width = event.window.data1;
-				vid.height = event.window.data2;
+				/* SDL2 SIZE_CHANGED reports logical (point) sizes, but we
+				   need physical (pixel) sizes for Vulkan/RmlUI on HiDPI. */
+				SDL_Window *win = SDL_GetWindowFromID (event.window.windowID);
+				if (win)
+				{
+					int logical_w = event.window.data1;
+					int w, h;
+					SDL_Vulkan_GetDrawableSize (win, &w, &h);
+					vid.width = w;
+					vid.height = h;
+#ifdef USE_RMLUI
+					/* Mouse events arrive in logical coords; tell RmlUI the
+					   ratio so it can scale them to physical pixels. */
+					if (logical_w > 0)
+						UI_SetPixelRatio ((float)w / (float)logical_w);
+#endif
+				}
 				vid.restart_next_frame = true;
 				Cvar_FindVar ("scr_conscale")->callback (NULL);
 #ifdef USE_RMLUI
-				UI_Resize (event.window.data1, event.window.data2);
+				UI_Resize (vid.width, vid.height);
 #endif
 			}
 			break;
