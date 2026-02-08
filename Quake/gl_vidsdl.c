@@ -323,6 +323,57 @@ static int VID_GetCurrentRefreshRate (void)
 
 /*
 ====================
+VID_GetDisplayDPIScale
+Returns display DPI as a multiplier relative to 96 DPI baseline.
+Accounts for platform compositor scaling to avoid double-counting.
+====================
+*/
+float VID_GetDisplayDPIScale (void)
+{
+	if (!draw_context)
+		return 1.0f;
+
+	/* Detect if the OS compositor is already scaling (e.g. Wayland 150%) */
+	int logical_w = 0, drawable_w = 0, dummy = 0;
+	SDL_GetWindowSize (draw_context, &logical_w, &dummy);
+#ifdef USE_SDL3
+	SDL_GetWindowSizeInPixels (draw_context, &drawable_w, &dummy);
+#else
+	SDL_Vulkan_GetDrawableSize (draw_context, &drawable_w, &dummy);
+#endif
+
+	if (logical_w > 0)
+	{
+		float platform_scale = (float)drawable_w / (float)logical_w;
+		if (platform_scale > 1.05f)
+			return 1.0f; /* OS is already scaling pixels, don't double-count */
+	}
+
+#ifdef USE_SDL3
+	{
+		SDL_DisplayID display = SDL_GetDisplayForWindow (draw_context);
+		float         scale;
+		if (display == 0)
+			display = SDL_GetPrimaryDisplay ();
+		scale = SDL_GetDisplayContentScale (display);
+		return (scale > 0.0f) ? scale : 1.0f;
+	}
+#else
+	{
+		int   display;
+		float ddpi = 0.0f;
+		display = SDL_GetWindowDisplayIndex (draw_context);
+		if (display < 0)
+			display = 0;
+		if (SDL_GetDisplayDPI (display, &ddpi, NULL, NULL) == 0 && ddpi > 0.0f)
+			return ddpi / 96.0f;
+	}
+#endif
+	return 1.0f;
+}
+
+/*
+====================
 VID_GetCurrentBPP
 ====================
 */
