@@ -39,8 +39,19 @@ cvar_t ui_use_rmlui_hud = {"ui_use_rmlui_hud", "0", CVAR_ARCHIVE};     /* Use Rm
 cvar_t ui_use_rmlui_menus = {"ui_use_rmlui_menus", "1", CVAR_ARCHIVE}; /* Use RmlUI menus */
 
 static qboolean ui_syncing_cvars = false;
+static qboolean ui_show_pending_main_menu = false;
+static double ui_show_pending_since = 0.0;
+static double ui_startup_settle_until = 0.0;
+#define UI_STARTUP_SETTLE_SECS  0.8  /* total time startup suppression is active */
+#define UI_STARTUP_FADE_SECS    0.3  /* tail fade-out duration within settle window */
 
 static void UI_CloseMenu_f (void);
+static qboolean UI_IsMainMenuShowReady (void);
+static void UI_TryOpenPendingMainMenu (void);
+static void UI_ShowWhenReady_f (void);
+static void UI_QueueMainMenuShow (void);
+int UI_IsMainMenuStartupPending (void);
+double UI_StartupBlackoutAlpha (void);
 
 static void UI_MasterCvarChanged (cvar_t *var)
 {
@@ -74,13 +85,19 @@ static void UI_Toggle_f (void)
 
 static void UI_Show_f (void)
 {
-	/* Alias for opening the default menu. */
+	/* Immediate show (manual command behavior). */
+	ui_show_pending_main_menu = false;
+	ui_show_pending_since = 0.0;
+	ui_startup_settle_until = 0.0; /* cancel startup settle */
 	UI_PushMenu ("ui/rml/menus/main_menu.rml");
 }
 
 static void UI_Hide_f (void)
 {
 	/* Alias for closing menus. Don't force-hide if HUD is visible. */
+	ui_show_pending_main_menu = false;
+	ui_show_pending_since = 0.0;
+	ui_startup_settle_until = 0.0; /* cancel startup settle */
 	UI_CloseMenu_f ();
 }
 
@@ -117,10 +134,101 @@ static void UI_Menu_f (void)
 /* Close all RmlUI menus and return to game */
 static void UI_CloseMenu_f (void)
 {
+	ui_show_pending_main_menu = false;
+	ui_show_pending_since = 0.0;
+	ui_startup_settle_until = 0.0; /* cancel startup settle */
+
 	/* Tear down the menu stack synchronously */
 	UI_CloseAllMenusImmediate ();
 	if (!UI_IsHUDVisible ())
 		UI_SetVisible (0);
+}
+
+static qboolean UI_IsMainMenuShowReady (void)
+{
+	/* Wait for gameplay view AND for the startup console to finish retracting. */
+	return cls.state == ca_connected && cls.signon == SIGNONS && cl.worldmodel && !scr_disabled_for_loading && !con_forcedup && scr_con_current <= 1.0f;
+}
+
+static void UI_QueueMainMenuShow (void)
+{
+	ui_show_pending_main_menu = true;
+	if (ui_show_pending_since <= 0.0)
+		ui_show_pending_since = realtime;
+}
+
+static void UI_ShowWhenReady_f (void)
+{
+	/* Preload to avoid first-show layout/style jitter when it finally appears. */
+	UI_LoadDocument ("ui/rml/menus/main_menu.rml");
+
+	if (UI_IsMainMenuShowReady ())
+	{
+		ui_show_pending_main_menu = false;
+		ui_show_pending_since = 0.0;
+		UI_PushMenu ("ui/rml/menus/main_menu.rml");
+		return;
+	}
+
+	UI_QueueMainMenuShow ();
+	Con_DPrintf ("UI_ShowWhenReady_f: deferring main menu until startup load/console settle\n");
+}
+
+static void UI_TryOpenPendingMainMenu (void)
+{
+	if (!ui_show_pending_main_menu)
+		return;
+
+	if (!ui_use_rmlui_menus.value)
+	{
+		ui_show_pending_main_menu = false;
+		ui_show_pending_since = 0.0;
+		return;
+	}
+
+	if (!UI_IsMainMenuShowReady ())
+	{
+		/* Safety valve so a failed/missing demo doesn't block menu forever. */
+		if (ui_show_pending_since > 0.0 && realtime - ui_show_pending_since > 10.0 && !scr_disabled_for_loading)
+		{
+			ui_show_pending_main_menu = false;
+			ui_show_pending_since = 0.0;
+			ui_startup_settle_until = realtime + UI_STARTUP_SETTLE_SECS;
+			Con_DPrintf ("UI_TryOpenPendingMainMenu: timed out waiting, opening menu anyway\n");
+			UI_SetStartupMenuEnter ();
+			UI_PushMenu ("ui/rml/menus/main_menu.rml");
+		}
+		return;
+	}
+
+	ui_show_pending_main_menu = false;
+	ui_show_pending_since = 0.0;
+	/* Keep V_RenderView suppressed while entrance animation plays, then fade out.
+	 * Solid phase must exceed MENU_ENTER_DELAY_FRAMES + longest RCSS entrance transition (~0.4s). */
+	ui_startup_settle_until = realtime + UI_STARTUP_SETTLE_SECS;
+	UI_SetStartupMenuEnter ();
+	UI_PushMenu ("ui/rml/menus/main_menu.rml");
+}
+
+int UI_IsMainMenuStartupPending (void)
+{
+	if (ui_show_pending_main_menu)
+		return 1;
+	if (ui_startup_settle_until > 0.0 && realtime < ui_startup_settle_until)
+		return 1;
+	return 0;
+}
+
+double UI_StartupBlackoutAlpha (void)
+{
+	if (ui_show_pending_main_menu)
+		return 1.0;
+	if (ui_startup_settle_until <= 0.0 || realtime >= ui_startup_settle_until)
+		return 0.0;
+	double remaining = ui_startup_settle_until - realtime;
+	if (remaining > UI_STARTUP_FADE_SECS)
+		return 1.0;  /* solid phase — entrance animation still playing */
+	return remaining / UI_STARTUP_FADE_SECS;  /* linear fade-out */
 }
 #endif
 
@@ -1066,6 +1174,10 @@ void _Host_Frame (double time)
 	if (cls.state == ca_connected)
 		CL_ReadFromServer ();
 
+#ifdef USE_RMLUI
+	UI_TryOpenPendingMainMenu ();
+#endif
+
 	// update video
 	if (host_speeds.value)
 		time1 = Sys_DoubleTime ();
@@ -1209,6 +1321,7 @@ void Host_Init (void)
 		Cvar_SetCallback (&ui_use_rmlui_menus, UI_ComponentCvarChanged);
 		Cmd_AddCommand ("ui_toggle", UI_Toggle_f);
 		Cmd_AddCommand ("ui_show", UI_Show_f);
+		Cmd_AddCommand ("ui_show_when_ready", UI_ShowWhenReady_f);
 		Cmd_AddCommand ("ui_hide", UI_Hide_f);
 		Cmd_AddCommand ("ui_debugger", UI_Debugger_f);
 		Cmd_AddCommand ("ui_debuger", UI_Debugger_f);

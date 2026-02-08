@@ -32,6 +32,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifdef USE_RMLUI
 #include "ui_manager.h"
 extern cvar_t ui_use_rmlui_hud;
+extern cvar_t ui_use_rmlui_menus;
+extern int UI_IsMainMenuStartupPending (void);
+extern double UI_StartupBlackoutAlpha (void);
 #endif
 
 /*
@@ -1178,6 +1181,10 @@ SCR_DrawGUI
 static void SCR_DrawGUI (void *unused)
 {
 	cb_context_t *cbx = vulkan_globals.secondary_cb_contexts[SCBX_GUI];
+#ifdef USE_RMLUI
+	const qboolean suppress_native_overlay = ui_use_rmlui_menus.value && UI_IsMainMenuStartupPending ();
+	const float startup_blackout_alpha = suppress_native_overlay ? (float)UI_StartupBlackoutAlpha () : 0.0f;
+#endif
 
 	GL_SetCanvas (cbx, CANVAS_DEFAULT);
 	R_BindPipeline (cbx, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkan_globals.basic_blend_pipeline[cbx->render_pass_index]);
@@ -1185,6 +1192,13 @@ static void SCR_DrawGUI (void *unused)
 	// FIXME: only call this when needed
 	R_BeginDebugUtilsLabel (cbx, "2D");
 	SCR_TileClear (cbx);
+#ifdef USE_RMLUI
+	if (startup_blackout_alpha > 0.0f)
+	{
+		/* Blackout / fade overlay while entrance animation plays. */
+		Draw_Fill (cbx, 0.0f, 0.0f, (float)glwidth, (float)glheight, 0, startup_blackout_alpha);
+	}
+#endif
 
 	const qboolean cscqhud = (scr_style.value < 1.0f) && cl.qcvm.extfuncs.CSQC_DrawHud;
 	qboolean	   use_mutex = r_showbboxes.value && cscqhud;
@@ -1238,17 +1252,27 @@ static void SCR_DrawGUI (void *unused)
 	}
 	else
 	{
-		SCR_DrawCrosshair (cbx); // johnfitz
-		SCR_DrawNet (cbx);
-		SCR_DrawTurtle (cbx);
-		SCR_DrawPause (cbx);
-		SCR_CheckDrawCenterString (cbx);
-		Sbar_Draw (cbx);
-		SCR_DrawDevStats (cbx); // johnfitz
-		SCR_DrawFPS (cbx);		// johnfitz
-		SCR_DrawClock (cbx);	// johnfitz
-		SCR_DrawConsole (cbx);
-		M_Draw (cbx);
+#ifdef USE_RMLUI
+		if (suppress_native_overlay)
+		{
+			/* Keep startup clean while waiting for deferred RmlUI main menu. */
+			SCR_DrawConsole (cbx);
+		}
+		else
+#endif
+		{
+			SCR_DrawCrosshair (cbx); // johnfitz
+			SCR_DrawNet (cbx);
+			SCR_DrawTurtle (cbx);
+			SCR_DrawPause (cbx);
+			SCR_CheckDrawCenterString (cbx);
+			Sbar_Draw (cbx);
+			SCR_DrawDevStats (cbx); // johnfitz
+			SCR_DrawFPS (cbx);		// johnfitz
+			SCR_DrawClock (cbx);	// johnfitz
+			SCR_DrawConsole (cbx);
+			M_Draw (cbx);
+		}
 	}
 
 	if (use_mutex)
@@ -1301,6 +1325,10 @@ needs almost the entire 256k of stack space!
 */
 void SCR_UpdateScreen (qboolean use_tasks)
 {
+#ifdef USE_RMLUI
+	qboolean suppress_startup_world = false;
+#endif
+
 	if (!scr_initialized || !con_initialized || in_update_screen)
 		return; // not initialized yet
 
@@ -1332,6 +1360,9 @@ void SCR_UpdateScreen (qboolean use_tasks)
 	// tasks are created. This prevents race conditions between UI state changes
 	// and rendering on worker threads.
 	UI_ProcessPending ();
+	suppress_startup_world = ui_use_rmlui_menus.value && UI_IsMainMenuStartupPending ();
+	if (suppress_startup_world)
+		use_tasks = false; /* Keep startup blackout path simple and deterministic. */
 #endif
 
 	// decide on the height of the console
@@ -1374,7 +1405,10 @@ void SCR_UpdateScreen (qboolean use_tasks)
 	{
 		GL_SynchronizeEndRenderingTask ();
 		SCR_SetupFrame (NULL);
-		V_RenderView (use_tasks, INVALID_TASK_HANDLE, INVALID_TASK_HANDLE, INVALID_TASK_HANDLE);
+#ifdef USE_RMLUI
+		if (!(suppress_startup_world && UI_StartupBlackoutAlpha () >= 1.0))
+#endif
+			V_RenderView (use_tasks, INVALID_TASK_HANDLE, INVALID_TASK_HANDLE, INVALID_TASK_HANDLE);
 		S_ExtraUpdate ();
 		SCR_DrawGUI (NULL);
 		SCR_DrawDone (NULL);

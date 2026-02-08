@@ -24,6 +24,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "quakedef.h"
 #include "tasks.h"
 #include "atomics.h"
+#ifdef USE_RMLUI
+extern cvar_t ui_use_rmlui_menus;
+extern int UI_IsMainMenuStartupPending (void);
+#endif
 
 int r_visframecount; // bumped when going to a new PVS
 int r_framecount;	 // used for dlight push checking
@@ -475,6 +479,9 @@ void R_DrawEntitiesOnList (cb_context_t *cbx, int alphapass, int chain, qboolean
 	entity_t **const list = !alphapass ? cl_visedicts : alphapass == 1 ? cl_visedicts_alpha : cl_visedicts_alpha + cl_numvisedicts_alpha_overwater;
 
 	R_BeginDebugUtilsLabel (cbx, alphapass ? "Entities Alpha Pass" : "Entities");
+#ifdef USE_RMLUI
+	const qboolean suppress_viewmodel = ui_use_rmlui_menus.value && UI_IsMainMenuStartupPending ();
+#endif
 	// johnfitz -- sprites are not a special case
 	while (true)
 	{
@@ -504,6 +511,14 @@ void R_DrawEntitiesOnList (cb_context_t *cbx, int alphapass, int chain, qboolean
 		// spike -- this would be more efficient elsewhere, but its more correct here.
 		if (currententity->eflags & EFLAGS_EXTERIORMODEL)
 			continue;
+#ifdef USE_RMLUI
+		// During deferred startup-menu open, suppress any viewmodel-style entity draw.
+		if (suppress_viewmodel && (currententity->eflags & EFLAGS_VIEWMODEL))
+			continue;
+		if (suppress_viewmodel && currententity->model &&
+			!strncmp (currententity->model->name, "progs/v_", 8))
+			continue;
+#endif
 
 		switch (currententity->model->type)
 		{
@@ -539,6 +554,12 @@ void R_DrawViewModel (cb_context_t *cbx)
 {
 	if (!r_drawviewmodel.value || !r_drawentities.value || chase_active.value || scr_viewsize.value >= 130)
 		return;
+
+#ifdef USE_RMLUI
+	// Avoid a startup "weapon flash" while the deferred main menu is waiting to open.
+	if (ui_use_rmlui_menus.value && UI_IsMainMenuStartupPending ())
+		return;
+#endif
 
 	if (cl.items & IT_INVISIBILITY || cl.stats[STAT_HEALTH] <= 0)
 		return;
@@ -798,6 +819,9 @@ void R_ShowTris (cb_context_t *cbx)
 		if (r_drawviewmodel.value && !chase_active.value && cl.stats[STAT_HEALTH] > 0 && !(cl.items & IT_INVISIBILITY) && currententity->model &&
 			currententity->model->type == mod_alias && scr_viewsize.value < 130)
 		{
+#ifdef USE_RMLUI
+			if (!(ui_use_rmlui_menus.value && UI_IsMainMenuStartupPending ()))
+#endif
 			R_DrawAliasModel_ShowTris (cbx, currententity);
 		}
 	}
