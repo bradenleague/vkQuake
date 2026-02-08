@@ -1300,6 +1300,30 @@ void Sbar_Draw (cb_context_t *cbx)
 		// Sync game state to RmlUI data model
 		UI_SyncGameState(cl.stats, cl.items, cl.intermission, cl.gametype,
 		                    cl.maxclients, cl.levelname, cl.mapname, cl.time);
+
+		// Sync scoreboard player data in deathmatch or when scoreboard visible
+		if (cl.gametype == GAME_DEATHMATCH || sb_showscores)
+		{
+			int i;
+			ui_player_info_t sb_players[MAX_SCOREBOARD];
+			int sb_count = 0;
+
+			Sbar_SortFrags();
+			for (i = 0; i < scoreboardlines && i < MAX_SCOREBOARD; i++)
+			{
+				int k = fragsort[i];
+				scoreboard_t *s = &cl.scores[k];
+				if (!s->name[0]) continue;
+				sb_players[sb_count].name = s->name;
+				sb_players[sb_count].frags = s->frags;
+				sb_players[sb_count].colors = s->colors;
+				sb_players[sb_count].ping = s->ping;
+				sb_players[sb_count].is_local = (k == cl.viewentity - 1) ? 1 : 0;
+				sb_count++;
+			}
+			UI_SyncScoreboard(sb_players, sb_count);
+		}
+
 		return;
 	}
 	else if (rmlui_hud_shown)
