@@ -164,10 +164,6 @@ SV_Accelerate
 */
 cvar_t sv_maxspeed = {"sv_maxspeed", "320", CVAR_NOTIFY | CVAR_SERVERINFO};
 cvar_t sv_accelerate = {"sv_accelerate", "10", CVAR_NONE};
-cvar_t sv_airaccelerate = {"sv_airaccelerate", "7", CVAR_NONE};
-cvar_t sv_jumpbase = {"sv_jumpbase", "200", CVAR_NONE};
-cvar_t sv_jumphold_time = {"sv_jumphold_time", "0.25", CVAR_NONE};
-cvar_t sv_jumphold_accel = {"sv_jumphold_accel", "400", CVAR_NONE};
 void   SV_Accelerate (float wishspeed, const vec3_t wishdir)
 {
 	int	  i;
@@ -198,7 +194,7 @@ void SV_AirAccelerate (float wishspeed, vec3_t wishveloc)
 	if (addspeed <= 0)
 		return;
 	//	accelspeed = sv_accelerate.value * host_frametime;
-	accelspeed = sv_airaccelerate.value * wishspeed * host_frametime;
+	accelspeed = sv_accelerate.value * wishspeed * host_frametime;
 	if (accelspeed > addspeed)
 		accelspeed = addspeed;
 
@@ -216,22 +212,6 @@ void DropPunchAngle (void)
 	if (len < 0)
 		len = 0;
 	VectorScale (sv_player->v.punchangle, len, sv_player->v.punchangle);
-}
-
-/*
-===================
-SV_GetEntityMaxSpeed
-
-Per-entity maxspeed: if the QC sets .maxspeed on the player,
-use that instead of the global sv_maxspeed cvar.
-===================
-*/
-static float SV_GetEntityMaxSpeed (void)
-{
-	eval_t *val = GetEdictFieldValue (sv_player, ED_FindFieldOffset ("maxspeed"));
-	if (val && val->_float > 0)
-		return val->_float;
-	return sv_maxspeed.value;
 }
 
 /*
@@ -260,19 +240,10 @@ void SV_WaterMove (void)
 		wishvel[2] += cmd.upmove;
 
 	wishspeed = VectorLength (wishvel);
+	if (wishspeed > sv_maxspeed.value)
 	{
-		float maxspd = SV_GetEntityMaxSpeed ();
-		if (maxspd != sv_maxspeed.value && sv_maxspeed.value > 0 && wishspeed > 0)
-		{
-			float scale = maxspd / sv_maxspeed.value;
-			VectorScale (wishvel, scale, wishvel);
-			wishspeed *= scale;
-		}
-		if (wishspeed > maxspd)
-		{
-			VectorScale (wishvel, maxspd / wishspeed, wishvel);
-			wishspeed = maxspd;
-		}
+		VectorScale (wishvel, sv_maxspeed.value / wishspeed, wishvel);
+		wishspeed = sv_maxspeed.value;
 	}
 	wishspeed *= 0.7;
 
@@ -336,13 +307,10 @@ void SV_NoclipMove (void)
 	velocity[2] = forward[2] * cmd.forwardmove + right[2] * cmd.sidemove;
 	velocity[2] += cmd.upmove * 2; // doubled to match running speed
 
+	if (VectorLength (velocity) > sv_maxspeed.value)
 	{
-		float maxspd = SV_GetEntityMaxSpeed ();
-		if (VectorLength (velocity) > maxspd)
-		{
-			VectorNormalize (velocity);
-			VectorScale (velocity, maxspd, velocity);
-		}
+		VectorNormalize (velocity);
+		VectorScale (velocity, sv_maxspeed.value, velocity);
 	}
 }
 
@@ -377,19 +345,10 @@ void SV_AirMove (void)
 
 	VectorCopy (wishvel, wishdir);
 	wishspeed = VectorNormalize (wishdir);
+	if (wishspeed > sv_maxspeed.value)
 	{
-		float maxspd = SV_GetEntityMaxSpeed ();
-		if (maxspd != sv_maxspeed.value && sv_maxspeed.value > 0 && wishspeed > 0)
-		{
-			float scale = maxspd / sv_maxspeed.value;
-			VectorScale (wishvel, scale, wishvel);
-			wishspeed *= scale;
-		}
-		if (wishspeed > maxspd)
-		{
-			VectorScale (wishvel, maxspd / wishspeed, wishvel);
-			wishspeed = maxspd;
-		}
+		VectorScale (wishvel, sv_maxspeed.value / wishspeed, wishvel);
+		wishspeed = sv_maxspeed.value;
 	}
 
 	if (sv_player->v.movetype == MOVETYPE_NOCLIP)

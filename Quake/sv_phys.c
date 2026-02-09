@@ -972,55 +972,6 @@ static void SV_WalkMove (edict_t *ent)
 
 /*
 ================
-SV_VariableJumpHold
-
-Apply additional upward velocity while jump button is held
-================
-*/
-extern cvar_t sv_jumphold_time;
-extern cvar_t sv_jumphold_accel;
-
-static void SV_VariableJumpHold (edict_t *ent, int clientnum)
-{
-	client_t *client = &svs.clients[clientnum];
-
-	// Only for walking, alive players not in water
-	if (ent->v.movetype != MOVETYPE_WALK)
-		return;
-	if (ent->v.health <= 0)
-		return;
-	if (ent->v.waterlevel >= 2)
-		return;
-	if (sv_jumphold_accel.value <= 0 || sv_jumphold_time.value <= 0)
-		return;
-
-	qboolean button_down = (ent->v.button2 != 0);
-
-	// Detect jump initiation: button2 pressed, not on ground, velocity_z positive
-	if (button_down && !client->jump_held && ent->v.velocity[2] > 0
-		&& !((int)ent->v.flags & FL_ONGROUND))
-	{
-		client->jump_held = true;
-		client->jump_start_time = qcvm->time;
-	}
-
-	// Apply hold boost
-	if (client->jump_held)
-	{
-		if (button_down && ent->v.velocity[2] > 0
-			&& (qcvm->time - client->jump_start_time) < sv_jumphold_time.value)
-		{
-			ent->v.velocity[2] += sv_jumphold_accel.value * host_frametime;
-		}
-		else
-		{
-			client->jump_held = false;
-		}
-	}
-}
-
-/*
-================
 SV_Physics_Client
 
 Player character actions
@@ -1061,7 +1012,6 @@ static void SV_Physics_Client (edict_t *ent, int num)
 			return;
 		if (!SV_CheckWater (ent) && !((int)ent->v.flags & FL_WATERJUMP))
 			SV_AddGravity (ent);
-		SV_VariableJumpHold (ent, num - 1);
 		SV_CheckStuck (ent);
 		SV_WalkMove (ent);
 		break;
