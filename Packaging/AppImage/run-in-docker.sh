@@ -20,5 +20,5 @@ mkdir "$FOLDER"
 	-i ../../Misc/vkQuake_256.png --icon-filename=vkquake --output appimage
 
 cp "vkQuake-$VERSION-x86_64.AppImage" "$FOLDER/vkquake.AppImage"
-cp ../../LICENSE.txt "$FOLDER"
+cp ../../LICENSE "$FOLDER"
 tar -zcvf "$ARCHIVE" "$FOLDER"

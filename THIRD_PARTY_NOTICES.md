@@ -7,7 +7,7 @@ This project includes or links against the following third-party software and as
 - **Source:** https://github.com/Novum/vkQuake
 - **License:** GNU General Public License v2 (GPL-2.0)
 - **Location:** Root of this repository (engine source in `Quake/`, `Shaders/`)
-- **License file:** `LICENSE.txt`
+- **License file:** `LICENSE`
 
 ## RmlUI
 

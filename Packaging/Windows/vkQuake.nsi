@@ -145,7 +145,7 @@ Section "Game" GAME
 	SetOutPath "$INSTDIR"
     File "${SRCDIR}\*.exe"
 	File "${SRCDIR}\*.dll"
-	File "..\..\LICENSE.txt"
+	File "..\..\LICENSE"
 	
 	!insertmacro MUI_STARTMENU_WRITE_BEGIN Application
 		CreateDirectory "$SMPROGRAMS\$StartMenuFolder"
