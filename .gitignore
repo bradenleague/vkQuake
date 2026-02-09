@@ -1,5 +1,39 @@
-*.suo
-vkquake.VC*
+# Base game assets (downloaded by setup.sh)
+id1/
+
+# Mod directories (cloned or dropped in at project root)
+# Standard Quake convention — each mod is its own directory
+tatoosh/
+rm1.2/
+
+# Build directories
+build/
+build_*/
+cmake-build-*/
+out/
+
+# IDE files
+.idea/
+.vscode/settings.json
+*.swp
+*.swo
+*~
+.DS_Store
+.settings
+.project
+.cproject
+.cache/
+
+# Compiled binaries
+*.o
+*.a
+*.so
+*.dylib
+*.dll
+*.exe
+*.res
+
+# Engine build artifacts
 Quake/*.dll
 Quake/*.o
 Quake/*.d
@@ -9,7 +43,31 @@ Quake/vkquake.pak
 Quake/embedded_pak.c
 Quake/*.exe
 Quake/*.res
-Windows/VisualStudio/Id1
+vkquake
+quakespasm
+
+# Tools (downloaded/built separately — see README for setup)
+tools/
+
+# Compiled assets
+*.pak
+*.pk3
+progs.dat
+*.lno
+*.bsp
+*.lit
+
+# Meson
+.ninja_*
+meson-*
+subprojects/.wraplock
+
+# CMake (generated Makefiles, not our top-level one)
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+
+# SPIR-V compiled shaders
 Shaders/Compiled/Debug/*.spv
 Shaders/Compiled/Debug/*.c
 Shaders/Compiled/Debug/*.d
@@ -19,23 +77,55 @@ Shaders/Compiled/Release/*.d
 Shaders/*.exe
 Shaders/*.obj
 Shaders/bintoc
+
+# Generated files
+*.c.spv
+embedded_pak.c
+vkquake.pak
+
+# Visual Studio / Windows
+*.suo
+vkquake.VC*
 Windows/VisualStudio/.vs
 Windows/VisualStudio/Build-*
 Windows/VisualStudio/enc_temp_folder
+Windows/VisualStudio/Id1
+
+# Packaging
 Packaging/AppImage/AppDir
 Packaging/AppImage/vkquake*
 Packaging/Windows/vkQuake-Installer-*.exe
 Packaging/Windows/vkQuake*.zip
+
+# Misc build tools
 Misc/vq_pak/mkpak
 Misc/vq_pak/*.exe
 Misc/vq_pak/*.dSYM
-build/
-subprojects/.wraplock
-.settings
-.project
-.cproject
-.DS_Store
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+
+# User-specific config
+config.cfg.local
+
+# Engine-saved config (vkQuake auto-saves to this file on exit)
+vkQuake.cfg
+
+# Python venv
+.venv/
+
+# Scratch/notes
 history.txt
-.vscode/settings.json
 helgrind.log
-.cache/
+
+# Claude Code local settings (not shared)
+.claude/settings.local.json
+
+# Debug files
+*.dSYM/
+*.pdb
+
+# Test output
+test_results/

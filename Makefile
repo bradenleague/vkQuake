@@ -19,12 +19,12 @@ QC_SRC := $(if $(MOD_NAME),$(wildcard $(MOD_NAME)/qcsrc/*.qc))
 FTEQCC := $(if $(filter Darwin,$(shell uname -s)),tools/fteqcc,tools/fteqcc64)
 GAME_FLAG := $(if $(MOD_NAME),-game $(MOD_NAME))
 
-.PHONY: all libs engine run clean distclean setup meson-setup assemble check-submodules
+.PHONY: all libs engine run clean distclean setup meson-setup assemble check-rmlui
 
-# --- Submodule guard ---
-check-submodules:
+# --- RmlUI source guard ---
+check-rmlui:
 	@if [ ! -f lib/rmlui/CMakeLists.txt ]; then \
-		echo "Error: RmlUI submodule not initialized. Run 'make setup' first."; \
+		echo "Error: lib/rmlui/ missing. Repository may be incomplete."; \
 		exit 1; \
 	fi
 
@@ -33,7 +33,7 @@ all: engine
 
 libs: engine
 
-engine: check-submodules build/.configured
+engine: check-rmlui build/.configured
 	meson compile -C build
 
 # Stamp-based meson setup — re-runs when meson.build or options change

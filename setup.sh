@@ -64,15 +64,15 @@ if [ ${#missing[@]} -gt 0 ]; then
     exit 1
 fi
 
-# ── 2. Initialize submodules ──────────────────────────────────────
+# ── 2. Verify RmlUI sources ───────────────────────────────────────
 
-printf "\n${BOLD}Initializing submodules...${RESET}\n"
+printf "\n${BOLD}Checking RmlUI...${RESET}\n"
 
-if [ ! -f lib/rmlui/CMakeLists.txt ]; then
-    git submodule update --init --recursive
-    ok "RmlUI submodule initialized"
+if [ -f lib/rmlui/CMakeLists.txt ]; then
+    ok "RmlUI sources present"
 else
-    ok "RmlUI submodule already present"
+    fail "lib/rmlui/ missing — repository may be incomplete"
+    exit 1
 fi
 
 # ── 3. Ensure LibreQuake PAK files ──────────────────────────────

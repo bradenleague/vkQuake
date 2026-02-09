@@ -282,8 +282,6 @@ incdirs = [
 
 cxx = meson.get_compiler('cpp')
 cxxflags = ['-Wall', '-std=c++17']
-cmake = import('cmake')
-
 # RmlUI integration (optional)
 use_rmlui = get_option('use_rmlui')
 rmlui_srcs = []
@@ -293,18 +291,18 @@ if use_rmlui
 
     # RmlUI sources
     rmlui_srcs = files(
-        '../src/ui_manager.cpp',
-        '../src/internal/render_interface_vk.cpp',
-        '../src/internal/system_interface.cpp',
-        '../src/internal/game_data_model.cpp',
-        '../src/internal/cvar_binding.cpp',
-        '../src/internal/menu_event_handler.cpp',
-        '../src/internal/stb_image_impl.c',
-        '../src/internal/quake_cvar_provider.cpp',
-        '../src/internal/quake_command_executor.cpp',
-        '../src/internal/notification_model.cpp',
-        '../src/internal/vk_allocator.cpp',
-        '../src/internal/quake_file_interface.cpp',
+        'src/ui_manager.cpp',
+        'src/internal/render_interface_vk.cpp',
+        'src/internal/system_interface.cpp',
+        'src/internal/game_data_model.cpp',
+        'src/internal/cvar_binding.cpp',
+        'src/internal/menu_event_handler.cpp',
+        'src/internal/stb_image_impl.c',
+        'src/internal/quake_cvar_provider.cpp',
+        'src/internal/quake_command_executor.cpp',
+        'src/internal/notification_model.cpp',
+        'src/internal/vk_allocator.cpp',
+        'src/internal/quake_file_interface.cpp',
     )
 
     # Add RmlUI shaders to the shaders list
@@ -316,31 +314,48 @@ if use_rmlui
 
     # RmlUI include directories
     rmlui_incdir = include_directories(
-        '../lib/rmlui/Include',
-        '../src',
-        '../src/internal',
+        'lib/rmlui/Include',
+        'src',
+        'src/internal',
         'Quake',
     )
 
-    # Build RmlUI via Meson's CMake bridge instead of a separate top-level CMake step.
-    rmlui_options = cmake.subproject_options()
-    rmlui_options.add_cmake_defines({
-        'BUILD_SHARED_LIBS': 'OFF',
-        'RMLUI_SAMPLES': 'OFF',
-        'RMLUI_LUA_BINDINGS': 'OFF',
-        'RMLUI_THIRDPARTY_CONTAINERS': 'ON',
-        'RMLUI_PRECOMPILED_HEADERS': 'OFF',
-        'CMAKE_POLICY_DEFAULT_CMP0156': 'NEW',
-        'CMAKE_POLICY_DEFAULT_CMP0179': 'NEW',
-    })
-    rmlui_subproj = cmake.subproject('rmlui', options: rmlui_options)
-    deps += [
-        rmlui_subproj.dependency('rmlui_core'),
-        rmlui_subproj.dependency('rmlui_debugger'),
-    ]
-
+    # Build RmlUI via CMake, driven at meson-setup time.
+    # Meson's cmake.subproject bridge produces empty .a files with Meson >=1.10
+    # (it fails to extract source lists from the CMake trace), so we drive CMake
+    # directly and link the resulting static libraries.
     freetype_dep = dependency('freetype2', required : true)
     deps += freetype_dep
+
+    rmlui_src_dir = meson.project_source_root() / 'lib' / 'rmlui'
+    rmlui_build_dir = meson.project_build_root() / 'rmlui_cmake_build'
+
+    message('Configuring RmlUI via CMake...')
+    rmlui_cmake_cfg = run_command('cmake',
+        '-G', 'Ninja',
+        '-S', rmlui_src_dir,
+        '-B', rmlui_build_dir,
+        '-DCMAKE_BUILD_TYPE=Release',
+        '-DBUILD_SHARED_LIBS=OFF',
+        '-DRMLUI_SAMPLES=OFF',
+        '-DRMLUI_LUA_BINDINGS=OFF',
+        '-DRMLUI_THIRDPARTY_CONTAINERS=ON',
+        '-DRMLUI_PRECOMPILED_HEADERS=OFF',
+        check : true)
+
+    message('Building RmlUI...')
+    rmlui_cmake_build = run_command('cmake',
+        '--build', rmlui_build_dir, '--parallel',
+        check : true)
+
+    cxx = meson.get_compiler('cpp')
+    rmlui_core_lib = cxx.find_library('rmlui',
+        dirs : [rmlui_build_dir],
+        static : true)
+    rmlui_debugger_lib = cxx.find_library('rmlui_debugger',
+        dirs : [rmlui_build_dir],
+        static : true)
+    deps += [rmlui_core_lib, rmlui_debugger_lib]
 
     message('RmlUI support: enabled')
 else
