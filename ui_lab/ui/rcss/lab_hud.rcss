@@ -1,0 +1,172 @@
+body.lab-hud {
+    width: 100%;
+    height: 100%;
+    color: #e8efe9;
+    font-family: Space Grotesk;
+    font-size: 16dp;
+}
+
+.lab-hud-top-left,
+.lab-hud-top-right,
+.lab-hud-bottom-left,
+.lab-hud-bottom-right,
+.lab-objectives,
+.lab-centerprint,
+.lab-notify,
+.lab-chat {
+    position: absolute;
+}
+
+.lab-hud-top-left {
+    top: 30dp;
+    left: 30dp;
+    display: flex;
+    gap: 8dp;
+}
+
+.lab-chip {
+    padding: 6dp 10dp;
+    border: 1dp #789e7a;
+    background-color: #102217d0;
+    color: #d9f3d9;
+    font-size: 14dp;
+}
+
+.lab-hud-top-right {
+    top: 30dp;
+    right: 30dp;
+    display: flex;
+    flex-direction: column;
+    gap: 8dp;
+    align-items: flex-end;
+}
+
+.lab-key {
+    padding: 6dp 12dp;
+    border: 1dp #6d7f6d;
+    background-color: #161616cc;
+    color: #7f8f7f;
+    font-size: 13dp;
+}
+
+.lab-key.owned {
+    border-color: #d7b65c;
+    color: #ffd88a;
+}
+
+.lab-hud-bottom-left {
+    left: 28dp;
+    bottom: 26dp;
+    display: flex;
+    gap: 8dp;
+}
+
+.lab-hud-bottom-right {
+    right: 28dp;
+    bottom: 26dp;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6dp;
+}
+
+.lab-stat {
+    display: flex;
+    align-items: center;
+    gap: 8dp;
+    padding: 8dp 12dp;
+    border: 1dp #4d6a56;
+    background-color: #0d1d14d8;
+}
+
+.lab-stat.big {
+    padding: 10dp 14dp;
+}
+
+.lab-stat .label {
+    font-size: 12dp;
+    color: #9db7a3;
+}
+
+.lab-stat .value {
+    font-size: 28dp;
+    color: #e8efe9;
+}
+
+.lab-stat.low {
+    border-color: #ca6a6a;
+    background-color: #2e1212d8;
+}
+
+.lab-weapon {
+    font-size: 18dp;
+    letter-spacing: 1dp;
+    color: #b0d7b4;
+}
+
+.lab-reserve {
+    display: flex;
+    gap: 8dp;
+    font-size: 13dp;
+    color: #8ca88f;
+}
+
+.lab-reserve span.active {
+    color: #f5d88b;
+}
+
+.lab-objectives {
+    left: 50%;
+    bottom: 28dp;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 16dp;
+    padding: 8dp 12dp;
+    border: 1dp #4f6f57;
+    background-color: #112117d8;
+    font-size: 14dp;
+}
+
+.lab-centerprint {
+    left: 50%;
+    top: 48%;
+    transform: translate(-50%, -50%);
+    max-width: 900dp;
+    text-align: center;
+    padding: 12dp 16dp;
+    border: 1dp #7a9f80;
+    background-color: #15241ad8;
+    font-size: 24dp;
+    color: #ebf6e7;
+}
+
+.lab-centerprint.fading {
+    opacity: 0.45;
+}
+
+.lab-notify {
+    left: 30dp;
+    top: 96dp;
+    display: flex;
+    flex-direction: column;
+    gap: 4dp;
+    max-width: 760dp;
+    font-size: 16dp;
+    color: #d7ead8;
+}
+
+.lab-notify .fading {
+    opacity: 0.45;
+}
+
+.lab-chat {
+    left: 50%;
+    bottom: 84dp;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8dp;
+    padding: 8dp 12dp;
+    border: 1dp #4f6f57;
+    background-color: #102017e8;
+    font-size: 18dp;
+}

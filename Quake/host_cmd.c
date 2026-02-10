@@ -249,6 +249,7 @@ filelist_item_t *modlist;
 static void Modlist_Add (const char *name)
 {
 	struct stat maps_info;
+	struct stat ui_info;
 	if ((strlen (name) == 3) && (q_tolower (name[0]) == 'i') && (q_tolower (name[1]) == 'd') && (name[2] == '1'))
 		return;
 	if (COM_ModForbiddenChars (name))
@@ -257,14 +258,17 @@ static void Modlist_Add (const char *name)
 	char progs_path[MAX_OSPATH];
 	char csprogs_path[MAX_OSPATH];
 	char maps_path[MAX_OSPATH];
+	char ui_path[MAX_OSPATH];
 	q_snprintf (pak_path, sizeof (pak_path), "%s/%s/pak0.pak", com_basedir, name);
 	q_snprintf (progs_path, sizeof (progs_path), "%s/%s/progs.dat", com_basedir, name);
 	q_snprintf (csprogs_path, sizeof (csprogs_path), "%s/%s/csprogs.dat", com_basedir, name);
 	q_snprintf (maps_path, sizeof (maps_path), "%s/%s/maps", com_basedir, name);
+	q_snprintf (ui_path, sizeof (ui_path), "%s/%s/ui", com_basedir, name);
 	FILE *pak_file = fopen (pak_path, "rb");
 	FILE *progs_file = fopen (progs_path, "rb");
 	FILE *csprogs_file = fopen (csprogs_path, "rb");
-	if (pak_file || progs_file || csprogs_file || (stat (maps_path, &maps_info) == 0 && maps_info.st_mode & S_IFDIR))
+	if (pak_file || progs_file || csprogs_file || (stat (maps_path, &maps_info) == 0 && maps_info.st_mode & S_IFDIR) ||
+		(stat (ui_path, &ui_info) == 0 && ui_info.st_mode & S_IFDIR))
 		FileList_Add (name, &modlist);
 	if (pak_file)
 		fclose (pak_file);
@@ -379,7 +383,7 @@ void SaveList_Init (void)
 ==================
 Host_Mods_f -- johnfitz
 
-list all potential mod directories (contain either a pak file or a progs.dat)
+list all potential mod directories (contain runtime game data, maps, or UI assets)
 ==================
 */
 static void Host_Mods_f (void)

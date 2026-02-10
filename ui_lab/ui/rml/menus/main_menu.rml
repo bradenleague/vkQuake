@@ -1,0 +1,59 @@
+<rml>
+<head>
+    <title>UI Lab Main Menu</title>
+    <link type="text/rcss" href="../../rcss/base.rcss"/>
+    <link type="text/rcss" href="../../rcss/lab_menu.rcss"/>
+</head>
+<body id="lab-main" data-model="game">
+
+    <div class="lab-backdrop"></div>
+
+    <div class="lab-shell">
+        <div class="lab-header">
+            <div class="lab-title">{{ game_title }} :: UI LAB</div>
+            <div class="lab-subtitle">Custom RmlUI mod menu override</div>
+        </div>
+
+        <div class="lab-grid">
+            <div class="lab-panel">
+                <div class="lab-panel-title">Play</div>
+                <button class="lab-btn primary" onclick="new_game()">Drop In</button>
+                <button class="lab-btn" onclick="navigate('singleplayer')">Single Player</button>
+                <button class="lab-btn" onclick="navigate('multiplayer')">Multiplayer</button>
+                <button class="lab-btn" onclick="navigate('mods')">Mods</button>
+            </div>
+
+            <div class="lab-panel">
+                <div class="lab-panel-title">Quick Host</div>
+                <div class="lab-row">
+                    <div class="lab-label">Map</div>
+                    <input id="map-name" type="text" class="lab-input" value="start"/>
+                </div>
+                <div class="lab-row">
+                    <div class="lab-label">Players</div>
+                    <input id="max-players" type="text" class="lab-input" value="4"/>
+                </div>
+                <button class="lab-btn" onclick="host_game('map-name')">Host Match</button>
+
+                <div class="lab-panel-title">Quick Connect</div>
+                <div class="lab-row">
+                    <div class="lab-label">Address</div>
+                    <input id="server-address" type="text" class="lab-input" value="localhost"/>
+                </div>
+                <button class="lab-btn" onclick="connect_to('server-address')">Connect</button>
+            </div>
+
+            <div class="lab-panel">
+                <div class="lab-panel-title">System</div>
+                <button class="lab-btn" onclick="navigate('options')">Options</button>
+                <button class="lab-btn" onclick="navigate('help')">Help</button>
+                <button class="lab-btn" onclick="command('ui_debugger')">Toggle Debugger</button>
+                <button class="lab-btn danger" onclick="navigate('quit')">Quit</button>
+            </div>
+        </div>
+
+        <div class="lab-footer">ESC closes current menu level</div>
+    </div>
+
+</body>
+</rml>

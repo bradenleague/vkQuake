@@ -1,0 +1,28 @@
+<rml>
+<head>
+    <title>UI Lab Pause Menu</title>
+    <link type="text/rcss" href="../../rcss/base.rcss"/>
+    <link type="text/rcss" href="../../rcss/lab_menu.rcss"/>
+</head>
+<body id="lab-pause" data-model="game">
+
+    <div class="lab-backdrop"></div>
+
+    <div class="lab-shell compact">
+        <div class="lab-header">
+            <div class="lab-title">Paused</div>
+            <div class="lab-subtitle">{{ map_name }}</div>
+        </div>
+
+        <div class="lab-panel solo">
+            <button class="lab-btn primary" onclick="close_all()">Resume</button>
+            <button class="lab-btn" onclick="navigate('save_game')">Save Game</button>
+            <button class="lab-btn" onclick="navigate('load_game')">Load Game</button>
+            <button class="lab-btn" onclick="navigate('options')">Options</button>
+            <button class="lab-btn" onclick="main_menu()">Main Menu</button>
+            <button class="lab-btn danger" onclick="navigate('quit')">Quit</button>
+        </div>
+    </div>
+
+</body>
+</rml>

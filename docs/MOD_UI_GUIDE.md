@@ -53,6 +53,8 @@ make run MOD_NAME=mymod
 ./build/vkquake -game mymod
 ```
 
+For a concrete reference, see the in-repo example mod: `ui_lab/` (`make run MOD_NAME=ui_lab`).
+
 ## Mod Directory Layout
 
 A fully customized mod might look like this (all `ui/` entries are optional):
@@ -78,6 +80,9 @@ mymod/
     └── fonts/
         └── MyCustomFont.ttf          # Replaces a base font (same filename)
 ```
+
+If you want the mod to appear in the in-game Mods menu, make sure the mod directory has at least one of:
+`pak0.pak`, `progs.dat`, `csprogs.dat`, `maps/`, or `ui/`.
 
 ## Automatic Mod Branding
 

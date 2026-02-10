@@ -73,6 +73,7 @@ This project follows the standard Quake directory convention — mods are direct
 3. Run with `make run MOD_NAME=mymod` or `./build/vkquake -game mymod`
 
 The main menu title is automatically derived from the active game directory name.
+For a working in-repo example, run `make run MOD_NAME=ui_lab` and see `ui_lab/README.md`.
 
 ## UI Development
 

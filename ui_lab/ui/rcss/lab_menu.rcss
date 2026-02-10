@@ -1,0 +1,142 @@
+body#lab-main,
+body#lab-pause {
+    width: 100%;
+    height: 100%;
+    color: #e9efe6;
+}
+
+.lab-backdrop {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #0a120d;
+}
+
+.lab-shell {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 1240dp;
+    transform: translate(-50%, -50%);
+    background-color: #111f17ee;
+    border: 2dp #9cc98b;
+    padding: 28dp;
+}
+
+.lab-shell.compact {
+    width: 520dp;
+}
+
+.lab-header {
+    margin-bottom: 20dp;
+}
+
+.lab-title {
+    font-family: Space Grotesk;
+    font-size: 42dp;
+    font-weight: bold;
+    letter-spacing: 2dp;
+    color: #d7f6c9;
+}
+
+.lab-subtitle {
+    font-size: 16dp;
+    letter-spacing: 1dp;
+    color: #9dc7a3;
+}
+
+.lab-grid {
+    display: flex;
+    flex-direction: row;
+    gap: 18dp;
+}
+
+.lab-panel {
+    flex: 1;
+    padding: 14dp;
+    border: 1dp #446950;
+    background-color: #0d1a13;
+}
+
+.lab-panel.solo {
+    display: flex;
+    flex-direction: column;
+    gap: 10dp;
+}
+
+.lab-panel-title {
+    font-family: Space Grotesk;
+    font-size: 18dp;
+    color: #8de5a2;
+    text-transform: uppercase;
+    margin-bottom: 10dp;
+}
+
+.lab-row {
+    margin-bottom: 10dp;
+}
+
+.lab-label {
+    font-size: 13dp;
+    margin-bottom: 4dp;
+    color: #9dc7a3;
+    text-transform: uppercase;
+}
+
+.lab-input {
+    width: 100%;
+    height: 34dp;
+    border: 1dp #4d7a5b;
+    background-color: #0a120d;
+    color: #e9efe6;
+    padding: 6dp 8dp;
+    font-size: 16dp;
+}
+
+.lab-input:focus {
+    border-color: #9ed47a;
+}
+
+.lab-btn {
+    display: block;
+    width: 100%;
+    margin-top: 8dp;
+    padding: 10dp 12dp;
+    border: 1dp #4d7a5b;
+    background-color: #183023;
+    color: #e9efe6;
+    text-transform: uppercase;
+    font-family: Space Grotesk;
+    font-size: 16dp;
+}
+
+.lab-btn:hover,
+.lab-btn:focus-visible {
+    border-color: #9ed47a;
+    background-color: #224130;
+}
+
+.lab-btn.primary {
+    border-color: #d9a94b;
+    background-color: #3c2a12;
+    color: #ffd88e;
+}
+
+.lab-btn.primary:hover,
+.lab-btn.primary:focus-visible {
+    background-color: #583b18;
+}
+
+.lab-btn.danger {
+    border-color: #c36767;
+    background-color: #401919;
+    color: #ffd2d2;
+}
+
+.lab-footer {
+    margin-top: 18dp;
+    font-size: 14dp;
+    color: #9dc7a3;
+}
