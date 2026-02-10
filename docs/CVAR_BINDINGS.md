@@ -76,8 +76,6 @@ Registered via `RegisterBool(engine_name, ui_name)`. Toggled in RML with `onclic
 | `m_filter` | `m_filter` | 0 | `options_game.rml` | |
 | `r_drawviewmodel` | `show_gun` | 1 | `options_game.rml` | `CVAR_NONE` — not archived |
 | `cl_startdemos` | `startup_demos` | 1 | `options_game.rml` | |
-| `ui_use_rmlui_hud` | `rmlui_hud` | 0 | `options_game.rml` | |
-| `ui_use_rmlui_menus` | `rmlui_menus` | 1 | `options_game.rml` | |
 | `bgm_extmusic` | `bgm_extmusic` | 1 | `options_sound.rml` | |
 | `snd_waterfx` | `snd_waterfx` | 1 | `options_sound.rml` | |
 
@@ -102,7 +100,6 @@ Registered via `RegisterEnum(engine_name, ui_name, values, labels)`. Cycled with
 | `sv_aim` | `sv_aim` | 1 | 0=Off, 1=On | `options_game.rml` | `CVAR_NONE` |
 | `v_gunkick` | `gun_kick` | 1 | 0=Off, 1=Classic, 2=Smooth | `options_game.rml` | |
 | `autofastload` | `auto_load` | 0 | 0=Off, 1=On | `options_game.rml` | |
-| `scr_style` | `hud_style` | 0 | 0=Simple, 1=Classic, 2=Modern | `options_game.rml` | Also read directly in `ui_manager.cpp` |
 | `skill` | `skill` | 1 | 0–3 = Easy/Normal/Hard/Nightmare | `options_game.rml` | `CVAR_NONE` |
 | `_cl_color` | `cl_color_top` | 0 | 0–13 (color names) | `player_setup.rml` | Packed/unpacked (top nibble) |
 | `_cl_color` | `cl_color_bottom` | 0 | 0–13 (color names) | `player_setup.rml` | Packed/unpacked (bottom nibble) |
@@ -117,7 +114,6 @@ These cvars are read via raw `Cvar_VariableValue()` calls in C++ code, not throu
 
 | Cvar | Read Location | Purpose |
 |------|---------------|---------|
-| `scr_style` | `ui_manager.cpp` — `GetHudDocumentFromStyle()` | Selects HUD document: <1=simple, <2=classic, >=2=modern |
 | `scr_uiscale` | `ui_manager.cpp` — `UpdateDpRatio()` | UI dp_ratio scaling; defaults to 1.0 if <0.5 |
 | `con_notifytime` | `notification_model.cpp` | Notify line expiry duration; defaults to 3.0 if <=0 |
 | `scr_centertime` | `notification_model.cpp` | Centerprint display duration; defaults to 2.0 if <=0 |

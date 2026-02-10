@@ -15,21 +15,20 @@ This means a mod can override **any** UI file by placing a file at the same rela
 
 ## Quick Start
 
-### 1. Enable RmlUI in your mod's `quake.rc`
+### 1. Set up your mod's `quake.rc`
 
 ```
-// quake.rc — minimum for RmlUI
+// quake.rc — minimum
 exec default.cfg
 exec config.cfg
 exec autoexec.cfg
 stuffcmds
 
-ui_use_rmlui_menus 1
-ui_use_rmlui_hud 1
-
 startdemos demo1 demo2 demo3
 ui_show_when_ready
 ```
+
+RmlUI menus and HUD are always active when the engine is compiled with `USE_RMLUI` (the default). No cvars needed to enable them.
 
 ### 2. Override only what you need
 
@@ -71,8 +70,7 @@ mymod/
     │   │   ├── main_menu.rml         # Replaces base main menu
     │   │   ├── pause_menu.rml        # Replaces base pause menu
     │   │   └── credits.rml           # New menu (navigate to it from another menu)
-    │   └── hud/
-    │       └── hud_modern.rml        # Replaces base modern HUD
+    │   └── hud.rml                   # Replaces base HUD
     ├── rcss/
     │   ├── base.rcss                 # Replaces base styles (colors, fonts, etc.)
     │   ├── menu.rcss                 # Replaces menu layout styles
@@ -97,7 +95,7 @@ The `{{ game_title }}` data binding automatically displays your mod's directory 
 | Asset Type | Base Path | Override by placing in... |
 |------------|-----------|---------------------------|
 | Menu documents | `ui/rml/menus/*.rml` | `mymod/ui/rml/menus/*.rml` |
-| HUD documents | `ui/rml/hud/*.rml` | `mymod/ui/rml/hud/*.rml` |
+| HUD document | `ui/rml/hud.rml` | `mymod/ui/rml/hud.rml` |
 | Stylesheets | `ui/rcss/*.rcss` | `mymod/ui/rcss/*.rcss` |
 | Fonts | `ui/fonts/*.ttf` | `mymod/ui/fonts/*.ttf` |
 
@@ -111,17 +109,9 @@ The `{{ game_title }}` data binding automatically displays your mod's directory 
 | `hud.rcss` | HUD positioning and element styles |
 | `widgets.rcss` | Form elements (sliders, checkboxes, dropdowns) |
 
-### HUD Variants
+### HUD
 
-The engine supports three HUD styles, selectable via the `scr_style` cvar:
-
-| Cvar Value | Document | Description |
-|------------|----------|-------------|
-| 0 | `ui/rml/hud.rml` | Minimal / simple |
-| 1 | `ui/rml/hud/hud_classic.rml` | Traditional bottom bar |
-| 2 | `ui/rml/hud/hud_modern.rml` | Corner-based with bracket frames |
-
-Override whichever variant(s) your mod uses.
+The engine uses a single HUD document at `ui/rml/hud.rml` (Classic retro layout with status bar, weapon icons, and face). Override it by placing your own `hud.rml` at the same path in your mod directory.
 
 ## Writing Custom Menus
 
@@ -211,14 +201,8 @@ Workflow: edit your mod's RML/RCSS files, switch to the game, type `ui_reload_cs
 
 ## UI-Related Cvars
 
-Set these in your mod's `quake.rc`:
-
 | Cvar | Default | Description |
 |------|---------|-------------|
-| `ui_use_rmlui_menus` | 1 | Use RmlUI for menus |
-| `ui_use_rmlui_hud` | 0 | Use RmlUI for in-game HUD |
-| `ui_use_rmlui` | 1 | Master switch (sets both) |
-| `scr_style` | 0 | HUD variant: 0=simple, 1=classic, 2=modern |
 | `scr_uiscale` | 1.0 | UI scale factor (0.5–3.0) |
 
 ## Example: Style-Only Override

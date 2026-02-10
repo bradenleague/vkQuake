@@ -92,8 +92,7 @@ RmlUI is **retained-mode** (documents loaded once, cached, shown/hidden):
 
 ### Mod Integration
 
-Mods at project root enable RmlUI via `quake.rc` cvars:
-- `ui_use_rmlui_menus 1` / `ui_use_rmlui_hud 1`
+Mods at project root use RmlUI automatically (always active when compiled with `USE_RMLUI`):
 - `{{ game_title }}` auto-derived from active game directory
 - `make run MOD_NAME=mymod` selects active mod
 

@@ -69,11 +69,7 @@ This allows nested menus (e.g., Main Menu → Options → Video Settings) where 
 
 ### Configuration
 
-| Cvar | Default | Description |
-|------|---------|-------------|
-| `ui_use_rmlui_menus` | 1 | Use RmlUI for Quake menus (main/options/pause) |
-| `ui_use_rmlui_hud` | 0 | Use RmlUI HUD (in-game overlay) |
-| `ui_use_rmlui` | 1 | Convenience master switch (sets both HUD + menus) |
+RmlUI menus and HUD are always active when compiled with `USE_RMLUI` (the default). The `ui_use_rmlui` cvar is a read-only indicator; there are no runtime toggles.
 
 ## Input Flow
 
@@ -92,11 +88,7 @@ in_sdl2.c: IN_SendKeyEvents()
     │                   │       │           └──[menus left?]
     │                   │       │                 NO ──► key_dest=key_game, IN_Activate()
     │                   │       │
-    │                   │       NO ──► [ui_use_rmlui_menus?]
-    │                   │                   │
-    │                   │                   YES ──► UI_PushMenu(), key_dest=key_menu
-    │                   │                   │
-    │                   │                   NO ──► M_ToggleMenu_f() (Quake menu)
+    │                   │       NO ──► UI_PushMenu(), key_dest=key_menu
     │
     └──[Other keys]
             │
@@ -274,15 +266,11 @@ if (key == K_ESCAPE) {
         return;
     }
 
-    // Otherwise, check if RmlUI menus should be used
-    if (ui_use_rmlui_menus.value) {
-        if (sv.active)
-            UI_PushMenu("ui/rml/menus/pause_menu.rml");
-        else
-            UI_PushMenu("ui/rml/menus/main_menu.rml");
-    } else {
-        M_ToggleMenu_f();  // Quake menu
-    }
+    // Open RmlUI menu
+    if (sv.active)
+        UI_PushMenu("ui/rml/menus/pause_menu.rml");
+    else
+        UI_PushMenu("ui/rml/menus/main_menu.rml");
 }
 ```
 
@@ -290,14 +278,10 @@ if (key == K_ESCAPE) {
 
 ```c
 #ifdef USE_RMLUI
-    if (ui_use_rmlui_hud.value) {
-        UI_ShowHUD(NULL);  // Default: hud_classic.rml
-        UI_SyncGameState(cl.stats, MAX_CL_STATS, cl.items, cl.intermission,
-                         cl.gametype, cl.maxclients,
-                         cl.levelname, cl.mapname, cl.time);
-    } else {
-        UI_HideHUD();
-    }
+    UI_ShowHUD(NULL);  // Default: hud.rml
+    UI_SyncGameState(cl.stats, MAX_CL_STATS, cl.items, cl.intermission,
+                     cl.gametype, cl.maxclients,
+                     cl.levelname, cl.mapname, cl.time);
 #endif
 ```
 
@@ -456,8 +440,6 @@ ui/
     │   ├── confirm_reset.rml
     │   └── quit.rml
     └── hud/
-        ├── hud_classic.rml
-        ├── hud_modern.rml
         ├── scoreboard.rml
         └── intermission.rml
 ```

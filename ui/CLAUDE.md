@@ -6,7 +6,8 @@ Use `/rmlui` skill when editing RCSS/RML — RmlUI has many syntax differences f
 
 ```
 rml/
-  hud/       hud_modern.rml, hud_classic.rml, scoreboard.rml, intermission.rml
+  hud.rml    Classic retro HUD (status bar, weapons, face, items)
+  hud/       scoreboard.rml, intermission.rml
   menus/     19 menu documents (main_menu, pause_menu, options, multiplayer, etc.)
 rcss/        base.rcss, hud.rcss, menu.rcss, main_menu.rcss, widgets.rcss
 fonts/       Lato, OpenSans, SpaceGrotesk

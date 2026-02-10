@@ -308,7 +308,6 @@ Settings menus use bidirectional binding between Quake cvars and UI controls.
 ```
  RegisterFloat("sensitivity", "sensitivity", 1.0, 20.0, 0.5)
  RegisterBool("vid_fullscreen", "fullscreen")
- RegisterEnum("scr_style", "hud_style", 3, {"Simple","Classic","Modern"})
  RegisterEnumValues("vid_anisotropic", "aniso", {1,2,4,8,16}, labels)
  RegisterString("_cl_name", "player_name")
 ```
@@ -351,7 +350,7 @@ Settings menus use bidirectional binding between Quake cvars and UI controls.
     │
     ├── data-event-change="cvar_changed('sensitivity')"
     │   OR
-    ├── data-event-click="cycle_cvar('hud_style', 1)"
+    ├── data-event-click="cycle_cvar('crosshair', 1)"
     │
     ▼
  MenuEventHandler::ProcessAction()
@@ -364,14 +363,14 @@ Settings menus use bidirectional binding between Quake cvars and UI controls.
     │             └── Cvar_SetValue("sensitivity", 3.5)
     │
     └── "cycle_cvar" path:
-          CvarBindingManager::CycleEnum("hud_style", +1)
+          CvarBindingManager::CycleEnum("crosshair", +1)
             │
-            ├── current = s_int_values["hud_style"]  (e.g. 2)
+            ├── current = s_int_values["crosshair"]  (e.g. 2)
             ├── next = (current + 1) % num_values     (e.g. 0)
-            ├── s_int_values["hud_style"] = next
-            ├── ICvarProvider::SetFloat("scr_style", 0.0)
-            └── DirtyVariable("hud_style")
-                DirtyVariable("hud_style_label")
+            ├── s_int_values["crosshair"] = next
+            ├── ICvarProvider::SetFloat("crosshair", 0.0)
+            └── DirtyVariable("crosshair")
+                DirtyVariable("crosshair_label")
 ```
 
 ### Feedback Loop Prevention
@@ -756,13 +755,11 @@ by `CvarBindingManager::RegisterAllBindings()`:
  fullscreen          vid_fullscreen      Bool
  vsync               vid_vsync           Bool
  crosshair           crosshair           Enum    {Off, Cross, Dot}
- hud_style           scr_style           Enum    {Simple, Classic, Modern}
  skill               skill               Enum    {Easy, Normal, Hard, Nightmare}
  player_name         _cl_name            String
  ...                 (50+ total)
 
  ENUM LABEL BINDINGS (auto-generated):
-   {{ hud_style_label }}  → "Simple" / "Classic" / "Modern"
    {{ skill_label }}      → "Easy" / "Normal" / "Hard" / "Nightmare"
    {{ vid_mode_label }}   → "1920x1080"
 ```

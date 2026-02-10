@@ -64,9 +64,6 @@ This project follows the standard Quake directory convention — mods are direct
    exec autoexec.cfg
    stuffcmds
 
-   ui_use_rmlui_menus 1
-   ui_use_rmlui_hud 1
-
    startdemos demo1 demo2 demo3
    ui_show_when_ready
    ```
