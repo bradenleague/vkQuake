@@ -6,26 +6,27 @@
 
 #include "engine_bridge.h"
 
-namespace QRmlUI {
-
-QuakeCommandExecutor& QuakeCommandExecutor::Instance()
+namespace QRmlUI
 {
-    static QuakeCommandExecutor instance;
-    return instance;
+
+QuakeCommandExecutor &QuakeCommandExecutor::Instance ()
+{
+	static QuakeCommandExecutor instance;
+	return instance;
 }
 
-void QuakeCommandExecutor::Execute(const std::string& command)
+void QuakeCommandExecutor::Execute (const std::string &command)
 {
-    // Add newline to execute the command
-    std::string cmd = command + "\n";
-    Cbuf_AddText(cmd.c_str());
+	// Add newline to execute the command
+	std::string cmd = command + "\n";
+	Cbuf_AddText (cmd.c_str ());
 }
 
-void QuakeCommandExecutor::ExecuteImmediate(const std::string& command)
+void QuakeCommandExecutor::ExecuteImmediate (const std::string &command)
 {
-    // Add newline and insert at front of buffer
-    std::string cmd = command + "\n";
-    Cbuf_InsertText(cmd.c_str());
+	// Add newline and insert at front of buffer
+	std::string cmd = command + "\n";
+	Cbuf_InsertText (cmd.c_str ());
 }
 
 } // namespace QRmlUI

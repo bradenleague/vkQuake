@@ -9,19 +9,21 @@
 
 #include "../types/command_executor.h"
 
-namespace QRmlUI {
+namespace QRmlUI
+{
 
 // Quake engine implementation of ICommandExecutor
-class QuakeCommandExecutor : public ICommandExecutor {
-public:
-    // Singleton access - the executor is stateless, just wraps engine functions
-    static QuakeCommandExecutor& Instance();
+class QuakeCommandExecutor : public ICommandExecutor
+{
+  public:
+	// Singleton access - the executor is stateless, just wraps engine functions
+	static QuakeCommandExecutor &Instance ();
 
-    void Execute(const std::string& command) override;
-    void ExecuteImmediate(const std::string& command) override;
+	void Execute (const std::string &command) override;
+	void ExecuteImmediate (const std::string &command) override;
 
-private:
-    QuakeCommandExecutor() = default;
+  private:
+	QuakeCommandExecutor () = default;
 };
 
 } // namespace QRmlUI

@@ -32,141 +32,145 @@
 #include <vector>
 #include "../types/command_executor.h"
 
-namespace QRmlUI {
+namespace QRmlUI
+{
 
 // Callback for key capture mode
-using KeyCaptureCallback = std::function<void(int key, const char* key_name)>;
+using KeyCaptureCallback = std::function<void (int key, const char *key_name)>;
 
-class MenuEventHandler : public Rml::EventListener {
-public:
-    // Get singleton instance
-    static MenuEventHandler& Instance();
+class MenuEventHandler : public Rml::EventListener
+{
+  public:
+	// Get singleton instance
+	static MenuEventHandler &Instance ();
 
-    // Set the command executor (call before Initialize, or uses default QuakeCommandExecutor)
-    static void SetExecutor(ICommandExecutor* executor);
+	// Set the command executor (call before Initialize, or uses default QuakeCommandExecutor)
+	static void SetExecutor (ICommandExecutor *executor);
 
-    // Get the current command executor
-    static ICommandExecutor* GetExecutor();
+	// Get the current command executor
+	static ICommandExecutor *GetExecutor ();
 
-    // Initialize the event handler with RmlUI context
-    static bool Initialize(Rml::Context* context);
+	// Initialize the event handler with RmlUI context
+	static bool Initialize (Rml::Context *context);
 
-    // Shutdown and cleanup
-    static void Shutdown();
+	// Shutdown and cleanup
+	static void Shutdown ();
 
-    // Register event listener with a document
-    static void RegisterWithDocument(Rml::ElementDocument* document);
+	// Register event listener with a document
+	static void RegisterWithDocument (Rml::ElementDocument *document);
 
-    // Process an action string (can be called directly for testing)
-    static void ProcessAction(const std::string& action);
+	// Process an action string (can be called directly for testing)
+	static void ProcessAction (const std::string &action);
 
-    // Set callback for key capture (for key binding menu)
-    static void SetKeyCaptureCallback(KeyCaptureCallback callback);
+	// Set callback for key capture (for key binding menu)
+	static void SetKeyCaptureCallback (KeyCaptureCallback callback);
 
-    // Clear key capture callback
-    static void ClearKeyCaptureCallback();
+	// Clear key capture callback
+	static void ClearKeyCaptureCallback ();
 
-    // Check if waiting for key capture
-    static bool IsCapturingKey();
+	// Check if waiting for key capture
+	static bool IsCapturingKey ();
 
-    // Called when a key is captured
-    static void OnKeyCaptured(int key, const char* key_name);
+	// Called when a key is captured
+	static void OnKeyCaptured (int key, const char *key_name);
 
-    // Cancel key capture mode (e.g., when Escape pressed during capture)
-    static void CancelKeyCapture();
+	// Cancel key capture mode (e.g., when Escape pressed during capture)
+	static void CancelKeyCapture ();
 
-    // Suppress focus navigation sound briefly (call before programmatic focus)
-    static void SuppressFocusSoundBriefly();
+	// Suppress focus navigation sound briefly (call before programmatic focus)
+	static void SuppressFocusSoundBriefly ();
 
-    // Rml::EventListener interface
-    void ProcessEvent(Rml::Event& event) override;
+	// Rml::EventListener interface
+	void ProcessEvent (Rml::Event &event) override;
 
-private:
-    MenuEventHandler() = default;
-    ~MenuEventHandler() = default;
+  private:
+	MenuEventHandler () = default;
+	~MenuEventHandler () = default;
 
-    // Parse and execute action string
-    void ExecuteAction(const std::string& action);
+	// Parse and execute action string
+	void ExecuteAction (const std::string &action);
 
-    // Action handlers
-    void ActionNavigate(const std::string& menu_path);
-    void ActionCommand(const std::string& command);
-    void ActionCvarChanged(const std::string& ui_name);
-    void ActionCycleCvar(const std::string& ui_name, int delta);
-    void ActionClose();
-    void ActionCloseAll();
-    void ActionQuit();
-    void ActionNewGame();
-    void ActionLoadGame(const std::string& slot);
-    void ActionSaveGame(const std::string& slot);
-    void ActionBindKey(const std::string& action);
-    void ActionMainMenu();
-    void ActionConnectTo(const std::string& element_id);
-    void ActionHostGame(const std::string& element_id);
-    void ActionLoadMod(const std::string& mod_name);
+	// Action handlers
+	void ActionNavigate (const std::string &menu_path);
+	void ActionCommand (const std::string &command);
+	void ActionCvarChanged (const std::string &ui_name);
+	void ActionCycleCvar (const std::string &ui_name, int delta);
+	void ActionClose ();
+	void ActionCloseAll ();
+	void ActionQuit ();
+	void ActionNewGame ();
+	void ActionLoadGame (const std::string &slot);
+	void ActionSaveGame (const std::string &slot);
+	void ActionBindKey (const std::string &action);
+	void ActionMainMenu ();
+	void ActionConnectTo (const std::string &element_id);
+	void ActionHostGame (const std::string &element_id);
+	void ActionLoadMod (const std::string &mod_name);
 
-    // Helper to extract argument from action string like "func('arg')"
-    static std::string ExtractArg(const std::string& action);
-    static std::pair<std::string, int> ExtractTwoArgs(const std::string& action);
+	// Helper to extract argument from action string like "func('arg')"
+	static std::string				   ExtractArg (const std::string &action);
+	static std::pair<std::string, int> ExtractTwoArgs (const std::string &action);
 
-    static MenuEventHandler s_instance;
-    static Rml::Context* s_context;
-    static KeyCaptureCallback s_key_callback;
-    static bool s_capturing_key;
-    static std::string s_key_action;  // The action being bound
-    static bool s_initialized;
-    static ICommandExecutor* s_executor;  // Injected command executor
-    static double s_last_new_game_time;
-    static double s_focus_sound_suppress_until;
+	static MenuEventHandler	  s_instance;
+	static Rml::Context		 *s_context;
+	static KeyCaptureCallback s_key_callback;
+	static bool				  s_capturing_key;
+	static std::string		  s_key_action; // The action being bound
+	static bool				  s_initialized;
+	static ICommandExecutor	 *s_executor; // Injected command executor
+	static double			  s_last_new_game_time;
+	static double			  s_focus_sound_suppress_until;
 };
 
 // Event listener that stores an action value and executes it when triggered
-class ActionEventListener : public Rml::EventListener {
-public:
-    explicit ActionEventListener(const Rml::String& action) : m_action(action) {}
+class ActionEventListener : public Rml::EventListener
+{
+  public:
+	explicit ActionEventListener (const Rml::String &action) : m_action (action) {}
 
-    void ProcessEvent(Rml::Event& event) override;
+	void ProcessEvent (Rml::Event &event) override;
 
-    // Called when listener is detached - we can clean up here
-    void OnDetach(Rml::Element* element) override;
+	// Called when listener is detached - we can clean up here
+	void OnDetach (Rml::Element *element) override;
 
-private:
-    Rml::String m_action;
+  private:
+	Rml::String m_action;
 };
 
 // Event instancer to create ActionEventListener for inline event handlers
 // Stores created listeners to manage their lifetime (RmlUI does NOT take ownership)
-class MenuEventInstancer : public Rml::EventListenerInstancer {
-public:
-    Rml::EventListener* InstanceEventListener(const Rml::String& value,
-                                               Rml::Element* element) override;
+class MenuEventInstancer : public Rml::EventListenerInstancer
+{
+  public:
+	Rml::EventListener *InstanceEventListener (const Rml::String &value, Rml::Element *element) override;
 
-    // Clean up all listeners
-    void ReleaseAllListeners();
+	// Clean up all listeners
+	void ReleaseAllListeners ();
 
-private:
-    std::vector<std::unique_ptr<ActionEventListener>> m_listeners;
+  private:
+	std::vector<std::unique_ptr<ActionEventListener>> m_listeners;
 };
 
 } // namespace QRmlUI
 
 // C API
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-// Initialize menu event handling
-int MenuEventHandler_Init(void);
+	// Initialize menu event handling
+	int MenuEventHandler_Init (void);
 
-// Shutdown
-void MenuEventHandler_Shutdown(void);
+	// Shutdown
+	void MenuEventHandler_Shutdown (void);
 
-// Process an action (for testing or direct invocation)
-void MenuEventHandler_ProcessAction(const char* action);
+	// Process an action (for testing or direct invocation)
+	void MenuEventHandler_ProcessAction (const char *action);
 
-// Key capture API
-int MenuEventHandler_IsCapturingKey(void);
-void MenuEventHandler_OnKeyCaptured(int key, const char* key_name);
+	// Key capture API
+	int	 MenuEventHandler_IsCapturingKey (void);
+	void MenuEventHandler_OnKeyCaptured (int key, const char *key_name);
 
 #ifdef __cplusplus
 }

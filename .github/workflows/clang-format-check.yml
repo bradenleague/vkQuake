@@ -9,6 +9,7 @@ jobs:
         path:
           - check: 'Quake'
           - check: 'Shaders'
+          - check: 'src'
     steps:
     - uses: actions/checkout@v4
     - uses: DoozyX/clang-format-lint-action@v0.17

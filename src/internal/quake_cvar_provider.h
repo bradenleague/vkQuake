@@ -9,22 +9,24 @@
 
 #include "../types/cvar_provider.h"
 
-namespace QRmlUI {
+namespace QRmlUI
+{
 
 // Quake engine implementation of ICvarProvider
-class QuakeCvarProvider : public ICvarProvider {
-public:
-    // Singleton access - the provider is stateless, just wraps engine functions
-    static QuakeCvarProvider& Instance();
+class QuakeCvarProvider : public ICvarProvider
+{
+  public:
+	// Singleton access - the provider is stateless, just wraps engine functions
+	static QuakeCvarProvider &Instance ();
 
-    float GetFloat(const std::string& name) const override;
-    std::string GetString(const std::string& name) const override;
-    void SetFloat(const std::string& name, float value) override;
-    void SetString(const std::string& name, const std::string& value) override;
-    bool Exists(const std::string& name) const override;
+	float		GetFloat (const std::string &name) const override;
+	std::string GetString (const std::string &name) const override;
+	void		SetFloat (const std::string &name, float value) override;
+	void		SetString (const std::string &name, const std::string &value) override;
+	bool		Exists (const std::string &name) const override;
 
-private:
-    QuakeCvarProvider() = default;
+  private:
+	QuakeCvarProvider () = default;
 };
 
 } // namespace QRmlUI

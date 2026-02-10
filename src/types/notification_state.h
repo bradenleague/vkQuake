@@ -10,25 +10,28 @@
 
 #include <string>
 
-namespace QRmlUI {
+namespace QRmlUI
+{
 
 // Number of visible notify lines (matches Quake's NUM_CON_TIMES)
 constexpr int NUM_NOTIFY_LINES = 4;
 
-struct NotifyLine {
-    std::string text;
-    double time = 0.0; // realtime when the line appeared
+struct NotifyLine
+{
+	std::string text;
+	double		time = 0.0; // realtime when the line appeared
 };
 
-struct NotificationState {
-    // Centerprint: single overwrite buffer
-    std::string centerprint;
-    double centerprint_expire = 0.0; // realtime when it should disappear
-    double centerprint_start = 0.0;  // realtime when it appeared
+struct NotificationState
+{
+	// Centerprint: single overwrite buffer
+	std::string centerprint;
+	double		centerprint_expire = 0.0; // realtime when it should disappear
+	double		centerprint_start = 0.0;  // realtime when it appeared
 
-    // Notify: rolling ring buffer of recent console lines
-    NotifyLine notify[NUM_NOTIFY_LINES];
-    int notify_head = 0; // next slot to write into
+	// Notify: rolling ring buffer of recent console lines
+	NotifyLine notify[NUM_NOTIFY_LINES];
+	int		   notify_head = 0; // next slot to write into
 };
 
 } // namespace QRmlUI

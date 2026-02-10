@@ -13,8 +13,10 @@
 #include <cstdio>
 #include <string>
 
-namespace QRmlUI {
-namespace {
+namespace QRmlUI
+{
+namespace
+{
 
 struct QFileHandle
 {
@@ -44,7 +46,7 @@ Rml::FileHandle QuakeFileInterface::Open (const Rml::String &path)
 	/* 1. Quake VFS: game dirs + pak files (handles mod overrides,
 	 *    pak-embedded assets, and the full engine search order). */
 	FILE *file = nullptr;
-	int   length = COM_FOpenFile (path.c_str (), &file, nullptr);
+	int	  length = COM_FOpenFile (path.c_str (), &file, nullptr);
 	if (length != -1 && file)
 	{
 		auto *qfh = new QFileHandle;
@@ -61,7 +63,7 @@ Rml::FileHandle QuakeFileInterface::Open (const Rml::String &path)
 	if (com_basedir[0] != '\0')
 	{
 		std::string base_path = std::string (com_basedir) + "/" + path.c_str ();
-		FILE       *f = fopen (base_path.c_str (), "rb");
+		FILE	   *f = fopen (base_path.c_str (), "rb");
 		if (f)
 			return OpenLoose (f);
 	}

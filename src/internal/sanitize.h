@@ -14,18 +14,21 @@
 #include <string>
 #include <algorithm>
 
-namespace QRmlUI {
-
-inline std::string SanitizeForConsole(const std::string& input)
+namespace QRmlUI
 {
-    std::string out;
-    out.reserve(input.size());
-    for (char c : input) {
-        if (c != ';' && c != '\n' && c != '\r' && c != '"') {
-            out += c;
-        }
-    }
-    return out;
+
+inline std::string SanitizeForConsole (const std::string &input)
+{
+	std::string out;
+	out.reserve (input.size ());
+	for (char c : input)
+	{
+		if (c != ';' && c != '\n' && c != '\r' && c != '"')
+		{
+			out += c;
+		}
+	}
+	return out;
 }
 
 } // namespace QRmlUI

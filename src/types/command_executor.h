@@ -10,20 +10,22 @@
 
 #include <string>
 
-namespace QRmlUI {
+namespace QRmlUI
+{
 
 // Interface for command execution
 // Implemented by infrastructure layer (QuakeCommandExecutor)
-class ICommandExecutor {
-public:
-    virtual ~ICommandExecutor() = default;
+class ICommandExecutor
+{
+  public:
+	virtual ~ICommandExecutor () = default;
 
-    // Execute a console command (adds to command buffer)
-    // Command should NOT include trailing newline - implementation adds it
-    virtual void Execute(const std::string& command) = 0;
+	// Execute a console command (adds to command buffer)
+	// Command should NOT include trailing newline - implementation adds it
+	virtual void Execute (const std::string &command) = 0;
 
-    // Execute a command immediately (inserts at front of buffer)
-    virtual void ExecuteImmediate(const std::string& command) = 0;
+	// Execute a command immediately (inserts at front of buffer)
+	virtual void ExecuteImmediate (const std::string &command) = 0;
 };
 
 } // namespace QRmlUI
