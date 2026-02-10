@@ -102,6 +102,8 @@ input.text, textarea, .input {
     color: #ffffff;
     font-size: 16dp;
     font-family: LatoLatin;
+    tab-index: auto;
+    nav: vertical;
 }
 
 input.text:hover, textarea:hover, .input:hover {
@@ -170,6 +172,8 @@ input.radio:checked {
 
 input.range {
     height: 24dp;
+    tab-index: auto;
+    nav: vertical;
 }
 
 input.range slidertrack {
@@ -187,6 +191,10 @@ input.range sliderbar {
 }
 
 input.range sliderbar:hover {
+    background-color: #8b0000;
+}
+
+input.range:focus-visible sliderbar {
     background-color: #8b0000;
 }
 
