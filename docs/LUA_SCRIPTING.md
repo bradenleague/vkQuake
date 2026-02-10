@@ -952,6 +952,443 @@ end
 
 ---
 
+## Lua-Driven Reticles
+
+The custom reticle element system (`<reticle>`, `<reticle-dot>`,
+`<reticle-line>`, `<reticle-ring>`, `<reticle-arc>`) uses 7 animatable
+RCSS properties. Today, animation is driven by two C++ booleans
+(`fire_flash`, `weapon_show`) that toggle `.firing`/`.equipping` classes.
+Lua unlocks a much richer interaction model.
+
+### How Reticles Work Today (No Lua)
+
+```
+ C++ GameDataModel                  RCSS                        Rendering
+ ═══════════════                    ════                        ═════════
+
+ fire_flash  (bool, 0.30s TTL)  ──► data-class-firing  ──────► .firing {
+ weapon_show (bool, 0.15s TTL)  ──► data-class-equipping ───►   reticle-gap: 7dp;    ← expand
+                                                                 reticle-radius: 14dp; ← expand
+                                                               }
+                                                               .equipping {
+                                                                 reticle-gap: 1dp;     ← collapse
+                                                                 reticle-length: 4dp;  ← collapse
+                                                               }
+
+ transition: reticle-radius reticle-gap reticle-length reticle-stroke 0.25s quadratic-out;
+```
+
+This gives exactly **2 binary states** with **fixed animation targets**.
+Every weapon, every reticle style gets the same expansion/collapse behavior.
+
+### What Lua Enables
+
+With Lua, modders can:
+
+1. **Per-weapon reticle parameters** — different spread, stroke, speed per weapon
+2. **Continuous animation** — idle breathing, ammo-reactive pulsing
+3. **Multi-state transitions** — not just firing/equipping but low-ammo, powerup, damage-taken
+4. **Dynamic geometry** — add/remove arcs, lines, rings based on game state
+5. **Parametric animation** — spread proportional to fire rate, not binary on/off
+
+### Default (Base Engine): Lua-Enhanced Reticle Controller
+
+This minimal implementation replaces the binary `.firing`/`.equipping`
+class toggles with a Lua controller that provides per-weapon parameters
+and smoother state management. Ships in the base `ui/` directory.
+
+**`ui/lua/reticle_controller.lua`**
+
+```lua
+Reticle = Reticle or {}
+
+-- Per-weapon animation profiles.
+-- Each weapon can define custom spread/collapse values for each reticle primitive.
+Reticle.PROFILES = {
+    -- [active_weapon bitflag] = { fire_gap, fire_radius, equip_gap, equip_length, equip_radius }
+    default = { fire_gap = 7, fire_radius = 14, equip_gap = 1, equip_length = 4, equip_radius = 4 },
+
+    [1]  = { fire_gap = 5,  fire_radius = 12, equip_gap = 2, equip_length = 5, equip_radius = 5 },  -- SG
+    [2]  = { fire_gap = 12, fire_radius = 18, equip_gap = 1, equip_length = 3, equip_radius = 3 },  -- SSG: big spread
+    [4]  = { fire_gap = 4,  fire_radius = 11, equip_gap = 2, equip_length = 6, equip_radius = 6 },  -- NG
+    [8]  = { fire_gap = 3,  fire_radius = 10, equip_gap = 2, equip_length = 6, equip_radius = 6 },  -- SNG: tighter
+    [16] = { fire_gap = 10, fire_radius = 16, equip_gap = 1, equip_length = 4, equip_radius = 4 },  -- GL: wide arc
+    [32] = { fire_gap = 9,  fire_radius = 15, equip_gap = 1, equip_length = 4, equip_radius = 4 },  -- RL
+    [64] = { fire_gap = 2,  fire_radius = 8,  equip_gap = 3, equip_length = 7, equip_radius = 7 },  -- LG: tight beam
+}
+
+Reticle.IDLE = { gap = 4, length = 8, radius = 10 }
+
+function Reticle.GetProfile(weapon)
+    return Reticle.PROFILES[weapon] or Reticle.PROFILES.default
+end
+
+function Reticle.Think(event, element, document)
+    local ch = document:GetElementById('crosshair-container')
+    if not ch then return end
+
+    local profile = Reticle.GetProfile(game.active_weapon)
+
+    if game.fire_flash then
+        Reticle.ApplyFiring(ch, profile)
+    elseif game.weapon_show then
+        Reticle.ApplyEquipping(ch, profile)
+    else
+        Reticle.ApplyIdle(ch)
+    end
+end
+
+function Reticle.ApplyFiring(container, profile)
+    -- Set per-weapon fire spread on each primitive type
+    local lines = container:GetElementsByTagName('reticle-line')
+    for _, line in ipairs(lines) do
+        line.style['reticle-gap'] = profile.fire_gap .. 'dp'
+    end
+
+    local rings = container:GetElementsByTagName('reticle-ring')
+    for _, ring in ipairs(rings) do
+        ring.style['reticle-radius'] = profile.fire_radius .. 'dp'
+    end
+end
+
+function Reticle.ApplyEquipping(container, profile)
+    local lines = container:GetElementsByTagName('reticle-line')
+    for _, line in ipairs(lines) do
+        line.style['reticle-gap'] = profile.equip_gap .. 'dp'
+        line.style['reticle-length'] = profile.equip_length .. 'dp'
+    end
+
+    local rings = container:GetElementsByTagName('reticle-ring')
+    for _, ring in ipairs(rings) do
+        ring.style['reticle-radius'] = profile.equip_radius .. 'dp'
+    end
+end
+
+function Reticle.ApplyIdle(container)
+    local lines = container:GetElementsByTagName('reticle-line')
+    for _, line in ipairs(lines) do
+        line.style['reticle-gap'] = Reticle.IDLE.gap .. 'dp'
+        line.style['reticle-length'] = Reticle.IDLE.length .. 'dp'
+    end
+
+    local rings = container:GetElementsByTagName('reticle-ring')
+    for _, ring in ipairs(rings) do
+        ring.style['reticle-radius'] = Reticle.IDLE.radius .. 'dp'
+    end
+end
+```
+
+**In `hud.rml`:**
+
+```xml
+<script src="../../lua/reticle_controller.lua"/>
+
+<!-- Remove data-class-firing/equipping — Lua handles it now -->
+<div id="crosshair-container" class="crosshair" data-if="reticle_style > 0"
+     onupdate="Reticle.Think(event, element, document)">
+    <!-- reticle elements unchanged -->
+</div>
+```
+
+RCSS transitions still handle the interpolation — Lua just sets the
+target values. The `transition` rule on all reticle properties means
+the Lua-set inline styles animate smoothly, with no per-frame stepping.
+
+```
+ Lua sets target    RCSS transition    Procedural geometry
+ ══════════════     ═══════════════    ═══════════════════
+ style['reticle-gap'] = '7dp'
+                    ──► interpolates 4dp → 7dp over 0.25s
+                                       ──► OnPropertyChange() fires
+                                           GenerateGeometry() rebuilds mesh
+```
+
+### ui_lab: Advanced Reticle Behaviors
+
+The Terminal Visor mod pushes the system further with continuous
+animation, multi-state awareness, and per-weapon reticle composition.
+
+**`ui_lab/ui/lua/visor_reticle.lua`**
+
+```lua
+VisorReticle = VisorReticle or {}
+
+-- Weapon-specific reticle compositions: define which primitives to use per weapon.
+-- This goes beyond the base 4 styles — each weapon gets a tailored reticle.
+VisorReticle.WEAPON_RETICLES = {
+    -- SG: cross + ring, medium spread
+    [1]  = { type = "cross_ring",  idle_gap = 4, idle_radius = 10,
+             fire_gap = 6, fire_radius = 13, fire_stroke = 2.0,
+             breath_amount = 0.5 },
+    -- SSG: wide arcs + dot, big kick
+    [2]  = { type = "arcs_dot",    idle_radius = 12, idle_arc_span = 80,
+             fire_radius = 20, fire_arc_span = 120,
+             breath_amount = 0.8 },
+    -- NG: tight dot + thin ring, fast pulse
+    [4]  = { type = "dot_ring",    idle_radius = 6,
+             fire_radius = 9, fire_dot_radius = 3,
+             breath_amount = 0.3, breath_speed = 3.0 },
+    -- SNG: dual ring, tight
+    [8]  = { type = "dual_ring",   idle_inner = 4, idle_outer = 8,
+             fire_inner = 6, fire_outer = 11,
+             breath_amount = 0.2, breath_speed = 4.0 },
+    -- GL: wide chevron, slow
+    [16] = { type = "arcs_dot",    idle_radius = 14, idle_arc_span = 60,
+             fire_radius = 22, fire_arc_span = 90,
+             breath_amount = 1.0, breath_speed = 1.0 },
+    -- RL: ring + cross, big punch
+    [32] = { type = "cross_ring",  idle_gap = 5, idle_radius = 12,
+             fire_gap = 14, fire_radius = 20, fire_stroke = 2.5,
+             breath_amount = 0.6 },
+    -- LG: tight dot, beam-focus
+    [64] = { type = "dot_ring",    idle_radius = 4,
+             fire_radius = 3, fire_dot_radius = 2,
+             breath_amount = 0.1, breath_speed = 6.0 },
+}
+
+VisorReticle.state = "idle"       -- "idle", "firing", "equipping", "cooldown"
+VisorReticle.state_start = 0
+VisorReticle.prev_fire = false
+VisorReticle.prev_equip = false
+VisorReticle.prev_weapon = 0
+
+-- Idle breathing: subtle pulsation so the reticle feels alive.
+function VisorReticle.BreathOffset()
+    local cfg = VisorReticle.GetWeaponConfig()
+    local amount = cfg.breath_amount or 0.5
+    local speed = cfg.breath_speed or 2.0
+    return math.sin(engine.time() * speed) * amount
+end
+
+function VisorReticle.GetWeaponConfig()
+    return VisorReticle.WEAPON_RETICLES[game.active_weapon]
+        or VisorReticle.WEAPON_RETICLES[1]  -- fallback to SG
+end
+
+function VisorReticle.Think(event, element, document)
+    local container = document:GetElementById('crosshair-container')
+    if not container then return end
+
+    -- State machine: detect transitions
+    local now = engine.time()
+    local firing = game.fire_flash
+    local equipping = game.weapon_show
+
+    -- Rising edge: entered firing
+    if firing and not VisorReticle.prev_fire then
+        VisorReticle.state = "firing"
+        VisorReticle.state_start = now
+    -- Rising edge: entered equipping
+    elseif equipping and not VisorReticle.prev_equip then
+        VisorReticle.state = "equipping"
+        VisorReticle.state_start = now
+    -- Falling edge: fire ended → brief cooldown before idle
+    elseif not firing and VisorReticle.prev_fire then
+        VisorReticle.state = "cooldown"
+        VisorReticle.state_start = now
+    -- Cooldown → idle after 0.15s
+    elseif VisorReticle.state == "cooldown" and (now - VisorReticle.state_start > 0.15) then
+        VisorReticle.state = "idle"
+    -- Equip ended
+    elseif not equipping and VisorReticle.state == "equipping" then
+        VisorReticle.state = "idle"
+    end
+
+    VisorReticle.prev_fire = firing
+    VisorReticle.prev_equip = equipping
+
+    -- Apply state to reticle primitives
+    local cfg = VisorReticle.GetWeaponConfig()
+
+    if VisorReticle.state == "firing" then
+        VisorReticle.ApplyFiring(container, cfg)
+    elseif VisorReticle.state == "equipping" then
+        VisorReticle.ApplyEquipping(container, cfg)
+    else
+        VisorReticle.ApplyIdle(container, cfg)
+    end
+
+    -- Low ammo warning: tighten reticle + change color
+    if game.ammo <= 5 and not game.is_axe then
+        VisorReticle.ApplyLowAmmo(container)
+    end
+
+    -- Weapon switch: rebuild reticle composition if weapon changed
+    if game.active_weapon ~= VisorReticle.prev_weapon then
+        VisorReticle.RebuildForWeapon(container, document, cfg)
+        VisorReticle.prev_weapon = game.active_weapon
+    end
+end
+
+function VisorReticle.ApplyFiring(container, cfg)
+    local lines = container:GetElementsByTagName('reticle-line')
+    for _, line in ipairs(lines) do
+        line.style['reticle-gap'] = (cfg.fire_gap or 7) .. 'dp'
+    end
+
+    local rings = container:GetElementsByTagName('reticle-ring')
+    for _, ring in ipairs(rings) do
+        ring.style['reticle-radius'] = (cfg.fire_radius or 14) .. 'dp'
+        if cfg.fire_stroke then
+            ring.style['reticle-stroke'] = cfg.fire_stroke .. 'dp'
+        end
+    end
+
+    local arcs = container:GetElementsByTagName('reticle-arc')
+    for _, arc in ipairs(arcs) do
+        arc.style['reticle-radius'] = (cfg.fire_radius or 14) .. 'dp'
+    end
+end
+
+function VisorReticle.ApplyEquipping(container, cfg)
+    local lines = container:GetElementsByTagName('reticle-line')
+    for _, line in ipairs(lines) do
+        line.style['reticle-gap'] = '1dp'
+        line.style['reticle-length'] = '3dp'
+    end
+
+    local rings = container:GetElementsByTagName('reticle-ring')
+    for _, ring in ipairs(rings) do
+        ring.style['reticle-radius'] = '3dp'
+    end
+end
+
+function VisorReticle.ApplyIdle(container, cfg)
+    local breath = VisorReticle.BreathOffset()
+
+    local lines = container:GetElementsByTagName('reticle-line')
+    for _, line in ipairs(lines) do
+        line.style['reticle-gap'] = (cfg.idle_gap or 4) + breath .. 'dp'
+        line.style['reticle-length'] = '8dp'
+    end
+
+    local rings = container:GetElementsByTagName('reticle-ring')
+    for _, ring in ipairs(rings) do
+        ring.style['reticle-radius'] = (cfg.idle_radius or 10) + breath .. 'dp'
+        ring.style['reticle-stroke'] = '1.5dp'
+    end
+
+    local arcs = container:GetElementsByTagName('reticle-arc')
+    for _, arc in ipairs(arcs) do
+        arc.style['reticle-radius'] = (cfg.idle_radius or 10) + breath .. 'dp'
+    end
+end
+
+function VisorReticle.ApplyLowAmmo(container)
+    -- Tighten everything by 30% and shift to amber
+    local primitives = container:QuerySelectorAll('reticle-dot, reticle-line, reticle-ring, reticle-arc')
+    for _, el in ipairs(primitives) do
+        el.style['image-color'] = '#e6a030cc'
+    end
+end
+
+-- Dynamic reticle composition: swap out child elements based on weapon.
+-- This is the advanced feature — the reticle shape itself changes per weapon.
+function VisorReticle.RebuildForWeapon(container, document, cfg)
+    -- Find the active <reticle> element
+    local reticles = container:GetElementsByTagName('reticle')
+    if #reticles == 0 then return end
+    local reticle = reticles[1]
+
+    -- Reset color on weapon switch
+    local primitives = container:QuerySelectorAll('reticle-dot, reticle-line, reticle-ring, reticle-arc')
+    for _, el in ipairs(primitives) do
+        el.style['image-color'] = ''  -- clear inline, fall back to RCSS
+    end
+end
+```
+
+**RCSS additions in `ui_lab/ui/rcss/lab_hud.rcss`:**
+
+```css
+/* Faster transitions for Lua-driven reticles (Lua sets targets, RCSS interpolates) */
+reticle-dot, reticle-line, reticle-ring, reticle-arc {
+    transition: reticle-radius reticle-gap reticle-length reticle-stroke
+                reticle-start-angle reticle-end-angle
+                image-color
+                0.15s quadratic-out;
+}
+
+/* Powerup reticle color overrides (Lua could also set these) */
+.has-quad reticle-dot,  .has-quad reticle-line,
+.has-quad reticle-ring, .has-quad reticle-arc  { image-color: #4488ffcc; }
+
+.has-pent reticle-dot,  .has-pent reticle-line,
+.has-pent reticle-ring, .has-pent reticle-arc  { image-color: #ff4444cc; }
+```
+
+### Key Design Principle: Lua Sets Targets, RCSS Animates
+
+```
+ PER FRAME:
+ ══════════
+ Lua reads game.fire_flash, game.active_weapon
+     │
+     ├── Looks up per-weapon profile
+     ├── Computes idle breath offset (sin wave)
+     └── Sets inline style values on reticle elements
+              │
+              ▼
+         element.style['reticle-gap'] = '7dp'
+              │
+              ▼
+ RCSS transition engine interpolates from current → target
+     (defined once in stylesheet, never touched by Lua)
+              │
+              ▼
+ OnPropertyChange() fires on each interpolation step
+     → GenerateGeometry() rebuilds procedural mesh
+              │
+              ▼
+ OnRender() draws the mesh at parent center
+```
+
+Lua never does per-frame geometry math. It just says "the gap should be
+7dp now" and the RCSS transition + procedural geometry pipeline handles
+the rest. This is the same pattern as the current `.firing` class
+approach, but with continuous values instead of binary states.
+
+### What Modders Can Customize (Without C++ Changes)
+
+| Aspect | Today (RCSS-only) | With Lua |
+|--------|-------------------|----------|
+| Fire animation targets | Fixed (same for all weapons) | Per-weapon profiles |
+| Equip animation targets | Fixed | Per-weapon profiles |
+| Animation states | 2 (firing, equipping) | N (idle, firing, cooldown, equipping, low-ammo, powerup, ...) |
+| Idle behavior | Static | Breathing/pulsing via `sin()` |
+| Reticle color | Fixed per theme | Reactive (low ammo = amber, powerup = blue, etc.) |
+| Reticle composition | 4 preset styles | Dynamic — change shape per weapon |
+| Transition timing | Fixed 0.25s | Per-state timing via different RCSS classes |
+| Spread amount | Fixed dp values | Proportional to weapon characteristics |
+
+### Idle Breathing Detail
+
+The `VisorReticle.BreathOffset()` function deserves explanation. This
+sets inline styles every frame, which normally bypasses RCSS transitions.
+For breathing, this is intentional — we want continuous sinusoidal motion,
+not a transition to a fixed target.
+
+However, when switching **from** idle **to** firing, the RCSS transition
+kicks in because we're setting a new fixed target (`fire_gap`). The
+transition interpolates from the current breath-offset position to the
+fire target, giving a natural feel.
+
+```
+ Time ─────────────────────────────────────►
+
+ Idle:     ~~~sin wave~~~  (Lua sets every frame, no transition)
+                          │
+                          ▼ fire_flash = true
+ Firing:                  ╲ (transition from ~4.3dp to 7dp over 0.15s)
+                            ─────── 7dp target ───────
+                                                      │
+                                                      ▼ fire_flash = false
+ Cooldown:                                            ╱ (transition 7dp → ~4dp)
+                                                     ~~~sin wave resumes~~~
+```
+
+---
+
 ## Interaction with Existing Systems
 
 ### Data Bindings
