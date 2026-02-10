@@ -22,6 +22,30 @@ Rml::FileHandle QuakeFileInterface::Open(const Rml::String& path)
         }
     }
 
+    // Try basedir + game name (catches mod files when com_gamedir points to userdir)
+    if (com_basedir[0] != '\0') {
+        const char* games = COM_GetGameNames(0);
+        if (games && games[0] != '\0') {
+            std::string game_list(games);
+            size_t pos = 0;
+            while (pos < game_list.size()) {
+                size_t sep = game_list.find(';', pos);
+                std::string game = game_list.substr(pos, sep - pos);
+                if (!game.empty()) {
+                    std::string mod_path = std::string(com_basedir) + "/" + game + "/" + path.c_str();
+                    FILE* f = fopen(mod_path.c_str(), "rb");
+                    if (f) {
+                        Con_DPrintf("QuakeFileInterface: Opened (basedir mod) %s\n", mod_path.c_str());
+                        return reinterpret_cast<Rml::FileHandle>(f);
+                    }
+                }
+                if (sep == std::string::npos)
+                    break;
+                pos = sep + 1;
+            }
+        }
+    }
+
     // Try base directory
     if (com_basedir[0] != '\0') {
         std::string base_path = std::string(com_basedir) + "/" + path.c_str();

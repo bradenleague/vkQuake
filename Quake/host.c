@@ -265,6 +265,11 @@ static void UI_TickStartup (void)
  * can re-evaluate after the new mod's quake.rc runs. */
 void UI_NotifyGameChanged (void)
 {
+	/* Flush cached documents so the file interface picks up the new mod's
+	 * UI files (or falls back to base) on the next load. */
+	UI_CloseAllMenusImmediate ();
+	UI_ReloadDocuments ();
+
 	ui_startup.phase = STARTUP_AUTO_DETECT;
 	ui_startup.auto_detect_after = realtime + UI_AUTO_MENU_DELAY;
 }
