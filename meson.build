@@ -373,6 +373,15 @@ if use_rmlui
         'Quake',
     )
 
+    # Lua scripting for RmlUI (optional, requires use_rmlui)
+    use_lua = get_option('use_lua')
+    if use_lua
+        lua_dep = dependency('lua', required : true)
+        deps += lua_dep
+        cflags += '-DUSE_LUA'
+        cxxflags += '-DUSE_LUA'
+    endif
+
     # Build RmlUI via CMake, driven at meson-setup time.
     # Meson's cmake.subproject bridge produces empty .a files with Meson >=1.10
     # (it fails to extract source lists from the CMake trace), so we drive CMake
@@ -390,7 +399,7 @@ if use_rmlui
         '-DCMAKE_BUILD_TYPE=Release',
         '-DBUILD_SHARED_LIBS=OFF',
         '-DRMLUI_SAMPLES=OFF',
-        '-DRMLUI_LUA_BINDINGS=OFF',
+        '-DRMLUI_LUA_BINDINGS=' + (use_lua ? 'ON' : 'OFF'),
         '-DRMLUI_THIRDPARTY_CONTAINERS=ON',
         '-DRMLUI_PRECOMPILED_HEADERS=OFF',
     ]
@@ -412,6 +421,14 @@ if use_rmlui
         dirs : [rmlui_build_dir],
         static : true)
     deps += [rmlui_core_lib, rmlui_debugger_lib]
+
+    if use_lua
+        rmlui_lua_lib = cxx.find_library('rmlui_lua',
+            dirs : [rmlui_build_dir],
+            static : true)
+        deps += rmlui_lua_lib
+        message('RmlUI Lua bindings: enabled')
+    endif
 
     message('RmlUI support: enabled')
 else

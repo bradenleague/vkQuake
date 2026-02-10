@@ -18,6 +18,9 @@
 
 #include <RmlUi/Core.h>
 #include <RmlUi/Debugger.h>
+#ifdef USE_LUA
+#include <RmlUi/Lua/Lua.h>
+#endif
 
 #include "internal/reticle_plugin.h"
 
@@ -247,6 +250,14 @@ extern "C"
 
 		// Register reticle custom elements (after Rml::Initialise so StyleSheetSpecification is ready)
 		QRmlUI::ReticlePlugin::Initialise ();
+
+#ifdef USE_LUA
+		// Initialize Lua plugin — registers LuaDocument instancer (handles <script> tags)
+		// and LuaEventListenerInstancer (handles inline Lua event handlers).
+		// Passing nullptr lets RmlUI own the lua_State; it is cleaned up in Rml::Shutdown().
+		Rml::Lua::Initialise ();
+		Con_DPrintf ("UI_Init: Lua scripting enabled\n");
+#endif
 
 		// Create context
 		g_state.context = Rml::CreateContext ("main", Rml::Vector2i (width, height));
