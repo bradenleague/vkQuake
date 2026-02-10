@@ -353,6 +353,9 @@ if use_rmlui
         'src/internal/notification_model.cpp',
         'src/internal/vk_allocator.cpp',
         'src/internal/quake_file_interface.cpp',
+        'src/internal/reticle_plugin.cpp',
+        'src/internal/reticle_elements.cpp',
+        'src/internal/reticle_geometry.cpp',
     )
 
     # Add RmlUI shaders to the shaders list

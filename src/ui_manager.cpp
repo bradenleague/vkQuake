@@ -19,14 +19,7 @@
 #include <RmlUi/Core.h>
 #include <RmlUi/Debugger.h>
 
-// Lottie plugin — compiled into librmlui.a when RMLUI_LOTTIE_PLUGIN=ON
-namespace Rml
-{
-namespace Lottie
-{
-void Initialise ();
-}
-} // namespace Rml
+#include "internal/reticle_plugin.h"
 
 #include <SDL.h>
 #include <algorithm>
@@ -245,15 +238,15 @@ extern "C"
 		Rml::SetSystemInterface (g_state.system_interface.get ());
 		Rml::SetRenderInterface (g_state.render_interface.get ());
 
-		// Register Lottie plugin (must be before Rml::Initialise)
-		Rml::Lottie::Initialise ();
-
 		// Initialize RmlUI
 		if (!Rml::Initialise ())
 		{
 			Con_Printf ("UI_Init: Failed to initialize RmlUI\n");
 			return 0;
 		}
+
+		// Register reticle custom elements (after Rml::Initialise so StyleSheetSpecification is ready)
+		QRmlUI::ReticlePlugin::Initialise ();
 
 		// Create context
 		g_state.context = Rml::CreateContext ("main", Rml::Vector2i (width, height));
