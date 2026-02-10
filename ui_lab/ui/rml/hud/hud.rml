@@ -3,8 +3,9 @@
     <title>Terminal Visor HUD</title>
     <link type="text/rcss" href="../../rcss/base.rcss"/>
     <link type="text/rcss" href="../../rcss/lab_hud.rcss"/>
+    <script src="../../lua/reticle_controller.lua"/>
 </head>
-<body data-model="game" class="visor-hud"
+<body id="hud" data-model="game" class="visor-hud"
       data-class-tier-0="face_index == 0"
       data-class-tier-1="face_index == 1"
       data-class-tier-2="face_index == 2"
@@ -183,9 +184,7 @@
     </div>
 
     <!-- Crosshair stays outside safe zone — always true viewport center -->
-    <div class="crosshair" data-if="reticle_style > 0"
-         data-class-firing="fire_flash"
-         data-class-equipping="weapon_show">
+    <div id="crosshair-container" class="crosshair" data-if="reticle_style > 0">
         <!-- Cross (style 1) -->
         <reticle data-if="reticle_style == 1">
             <reticle-line angle="0" />

@@ -235,6 +235,11 @@ bool GameDataModel::Initialize (Rml::Context *context)
 	constructor.Bind ("weapon_show", &g_game_state.weapon_show);
 	constructor.Bind ("fire_flash", &g_game_state.fire_flash);
 
+	// weapon_firing: true while weaponframe != 0 (weapon mid-animation).
+	// Unlike fire_flash/weapon_show, no expiry timer needed — tracks live
+	// engine state that goes false when the weapon returns to idle frame.
+	constructor.Bind ("weapon_firing", &g_game_state.weapon_firing);
+
 	// Computed: active ammo type booleans for reserves highlight
 	constructor.BindFunc (
 		"is_shells_weapon",
@@ -534,6 +539,7 @@ void GameDataModel::Update ()
 
 	DIRTY_IF_CHANGED (weapon_show, "weapon_show")
 	DIRTY_IF_CHANGED (fire_flash, "fire_flash")
+	DIRTY_IF_CHANGED (weapon_firing, "weapon_firing")
 
 #undef DIRTY_IF_CHANGED
 
