@@ -8,11 +8,11 @@ Use `UI_WantsInput()` (defined in `ui_manager.h`) for input consumption checks. 
 
 ## Current parity status
 
-- Most routing is mirrored (focus/resize/text/key/mouse/filter guards).
-- SDL2 currently has fuller key-rebind capture coverage:
-  - Escape cancels capture in keydown path.
-  - Mouse buttons and mouse wheel can be captured as bind targets.
-- SDL3 currently captures keydown for rebinding, but does not yet mirror SDL2's mouse-button/wheel capture and Escape-cancel behavior.
+- SDL2 and SDL3 are currently aligned for RmlUI input routing, including:
+  - Escape-to-cancel during key capture.
+  - Mouse button capture as bind targets.
+  - Mouse wheel capture as bind targets.
+- Keep this checklist as a regression guardrail whenever either backend changes.
 
 ## Required UI calls per event type
 
