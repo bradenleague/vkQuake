@@ -10,6 +10,7 @@
     background-color: rgba(0, 0, 0, 0.5);
     width: 100%;
     height: 100%;
+    nav: auto;
 }
 
 /* Flexbox centering wrapper */
@@ -82,10 +83,13 @@
     text-transform: uppercase;
     text-align: center;
     cursor: pointer;
+    tab-index: auto;
+    nav: vertical;
     transition: background-color 0.1s, border-color 0.1s, color 0.1s;
 }
 
-.btn:hover {
+.btn:hover,
+.btn:focus-visible {
     background-color: #1a1a1a;
     border-color: #ffffff;
     color: #ffffff;
@@ -117,10 +121,13 @@
     text-transform: uppercase;
     text-align: center;
     cursor: pointer;
+    tab-index: auto;
+    nav: vertical;
     transition: background-color 0.1s, border-color 0.1s;
 }
 
-.btn-primary:hover {
+.btn-primary:hover,
+.btn-primary:focus-visible {
     background-color: #b30000;
     border-color: #b30000;
 }
@@ -152,10 +159,13 @@
     text-transform: uppercase;
     text-align: center;
     cursor: pointer;
+    tab-index: auto;
+    nav: vertical;
     transition: background-color 0.1s, border-color 0.1s, color 0.1s;
 }
 
-.btn-quit:hover {
+.btn-quit:hover,
+.btn-quit:focus-visible {
     background-color: #ff3333;
     border-color: #ff3333;
     color: #ffffff;

@@ -42,6 +42,10 @@ void Cvar_Set(const char* var_name, const char* value);
 void Cbuf_AddText(const char* text);
 void Cbuf_InsertText(const char* text);
 
+/* ── Sound ────────────────────────────────────────────────────────── */
+
+void S_LocalSound(const char* name);
+
 /* ── Input system ─────────────────────────────────────────────────── */
 
 void IN_Activate(void);

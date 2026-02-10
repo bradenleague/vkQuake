@@ -172,6 +172,8 @@ void MenuEventHandler::RegisterWithDocument(Rml::ElementDocument* document)
     document->AddEventListener(Rml::EventId::Click, &s_instance, true);
     // Let data-value controllers update model values before we handle change events.
     document->AddEventListener(Rml::EventId::Change, &s_instance, false);
+    // Listen for focus events to play navigation sounds on keyboard navigation.
+    document->AddEventListener(Rml::EventId::Focus, &s_instance, false);
     document->SetAttribute(bound_flag, "1");
 }
 
@@ -233,6 +235,14 @@ void MenuEventHandler::CancelKeyCapture()
 
 void MenuEventHandler::ProcessEvent(Rml::Event& event)
 {
+    // Play navigation sound on keyboard-driven focus changes.
+    if (event.GetId() == Rml::EventId::Focus) {
+        if (event.GetParameter("focus_visible", false)) {
+            S_LocalSound("misc/menu1.wav");
+        }
+        return;
+    }
+
     // Get the action from the element's attribute
     Rml::Element* element = event.GetTargetElement();
     if (!element) return;

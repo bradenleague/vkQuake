@@ -76,7 +76,7 @@ Makefile (wrapper) → Meson (primary) → vkquake executable
 - `src/` — RmlUI integration layer (C++17). See `src/CLAUDE.md` for boundary rules and file map.
 - `ui/` — RML documents, RCSS stylesheets, fonts, images. See `ui/CLAUDE.md` for constraints and workflow.
 - `Shaders/` — GLSL shaders (engine + RmlUI), compiled to SPIR-V at build time.
-- `lib/rmlui/` — RmlUI library fork (submodule). See `lib/rmlui/CLAUDE.md`.
+- `lib/rmlui/` — RmlUI library fork (submodule).
 
 ### Rendering Pipeline
 
