@@ -69,7 +69,7 @@ fully mod-side, hot-reloadable, and requires zero engine recompilation.
       ├─ CvarBinding      ─── still owns "cvars" model
       ├─ MenuEventHandler ─── still dispatches action strings
       ├─ NotificationModel─── still manages centerprint/notify
-      └─ LuaBridge (NEW)  ─── exposes game state + engine.exec to Lua
+      └─ LuaBridge        ─── exposes game state + engine.exec to Lua
       │
       │ extern "C" boundary
       │
@@ -80,6 +80,40 @@ fully mod-side, hot-reloadable, and requires zero engine recompilation.
 Key principle: **Lua is additive**. The existing C++ data models, action
 dispatch, and binding system continue to work unchanged. Lua adds a
 scripting layer on top — modders can use both in the same document.
+
+### Design Philosophy
+
+This project uses a **document-authored, declarative** approach to UI.
+RML documents and RCSS stylesheets are the source of truth for layout,
+styling, and behavior. Data bindings (`{{ health }}`, `{{ weapon_label }}`)
+connect engine state to the document without code. RCSS transitions and
+class toggles drive animation and visual state changes.
+
+Lua's role is as a **reactive state mapper** — thin glue between engine
+events and document state. Scripts should:
+
+- **Read** from `game.*` (read-only — writes raise a Lua error)
+- **Write** to data model variables (exposing computed/derived state)
+- **Toggle classes** on documents (letting RCSS handle the visual response)
+- **Call registered engine actions** via `engine.exec()`
+
+Scripts should **not**:
+
+- Build or create element trees from code
+- Set inline styles (`element.style["prop"] = "val"` for layout/visual state)
+- Manage animation timers or frame-by-frame visual updates
+- Become the source of truth for anything visual
+
+If markup + RCSS + data binding can express it, prefer that over Lua.
+The reticle controller (`ui_lab/ui/lua/reticle_controller.lua`) is a
+good reference — it maps engine state to class names and lets RCSS do
+the rest. The base HUD uses pure `data-class` bindings instead.
+
+See also: [Event ownership](RMLUI_INTEGRATION.md) — `on*` attributes
+go through the Lua event instancer, which dispatches action strings
+(like `navigate`, `close`, `cycle_cvar`) via registered Lua globals.
+`data-event-*` attributes are for data model event callbacks inside
+`data-for` loops (like `load_slot`, `select_mod`).
 
 ---
 
@@ -433,7 +467,8 @@ modders with access to engine state without C++ changes.
 
 ### `game` Table (read-only, updated each frame)
 
-Mirrors all bindings from the C++ `GameDataModel`:
+Mirrors all bindings from the C++ `GameDataModel`. Read-only — writes
+raise a Lua error.
 
 ```lua
  game.health              -- int     (0-250)
@@ -464,10 +499,17 @@ Mirrors all bindings from the C++ `GameDataModel`:
  game.has_sigil1..4       -- bool
  game.armor_type          -- int     (0=none, 1=green, 2=yellow, 3=red)
  game.weapon_label        -- string  ("SHOTGUN", "ROCKET L.", etc.)
+ game.ammo_type_label     -- string  ("SHELLS", "NAILS", "ROCKETS", "CELLS", "")
  game.is_axe              -- bool
+ game.is_shells_weapon    -- bool    (SG or SSG)
+ game.is_nails_weapon     -- bool    (NG or SNG)
+ game.is_rockets_weapon   -- bool    (GL or RL)
+ game.is_cells_weapon     -- bool    (LG)
  game.deathmatch          -- bool
  game.coop                -- bool
  game.intermission        -- bool
+ game.intermission_type   -- int     (0=none, 1=text, 2=finale)
+ game.game_title          -- string  (derived from active game directory)
  game.level_name          -- string
  game.map_name            -- string
  game.time_minutes        -- int
@@ -476,7 +518,11 @@ Mirrors all bindings from the C++ `GameDataModel`:
  game.face_pain           -- bool    (took damage this frame)
  game.weapon_show         -- bool    (weapon switch flash active)
  game.fire_flash          -- bool    (fire flash active)
+ game.weapon_firing       -- bool    (weaponframe != 0, sustained fire)
  game.reticle_style       -- int     (resolved crosshair style)
+ game.chat_active         -- bool    (chat input overlay visible)
+ game.chat_prefix         -- string  ("say:" or "say_team:")
+ game.chat_text           -- string  (current chat input buffer)
  game.num_players         -- int
 ```
 
@@ -484,9 +530,11 @@ Mirrors all bindings from the C++ `GameDataModel`:
 
 ```lua
  engine.exec(cmd)              -- Queue console command (e.g. "map e1m1")
- engine.cvar_get(name)         -- Read cvar value (returns number or string)
+ engine.cvar_get(name)         -- Read cvar value (always returns string)
+ engine.cvar_get_number(name)  -- Read cvar value as number (returns float)
  engine.cvar_set(name, value)  -- Write cvar value
  engine.time()                 -- Current realtime (seconds, float)
+ engine.on_frame(name, fn)     -- Register a named per-frame callback
 ```
 
 ### Example: React to Engine State
@@ -530,11 +578,12 @@ scripts at the same path. A mod can also add entirely new scripts.
 
 ---
 
-## ui_lab Examples
+## ui_lab Examples (Planned)
 
-These examples show what Lua scripting enables in the existing `ui_lab`
-Terminal Visor HUD. Each example builds on the current `hud.rml` and
-requires zero C++ changes once the bootstrap is in place.
+These examples show what Lua scripting could enable in a `ui_lab`
+Terminal Visor HUD mod. Each example builds on the current `hud.rml`
+and requires zero C++ changes. These scripts do not ship in-tree —
+they serve as reference patterns for modders.
 
 ### Example 1: Damage Flash Overlay
 
@@ -991,108 +1040,46 @@ With Lua, modders can:
 4. **Dynamic geometry** — add/remove arcs, lines, rings based on game state
 5. **Parametric animation** — spread proportional to fire rate, not binary on/off
 
-### Default (Base Engine): Lua-Enhanced Reticle Controller
+### Base Engine: Declarative Reticle (No Lua)
 
-This minimal implementation replaces the binary `.firing`/`.equipping`
-class toggles with a Lua controller that provides per-weapon parameters
-and smoother state management. Ships in the base `ui/` directory.
+The base HUD uses pure `data-class` bindings — no Lua scripts. The
+`weapon_firing` binding tracks live `weaponframe != 0` state from the
+engine, and `weapon_show` tracks weapon raise animation.
 
-**`ui/lua/reticle_controller.lua`**
-
-```lua
-Reticle = Reticle or {}
-
--- Per-weapon animation profiles.
--- Each weapon can define custom spread/collapse values for each reticle primitive.
-Reticle.PROFILES = {
-    -- [active_weapon bitflag] = { fire_gap, fire_radius, equip_gap, equip_length, equip_radius }
-    default = { fire_gap = 7, fire_radius = 14, equip_gap = 1, equip_length = 4, equip_radius = 4 },
-
-    [1]  = { fire_gap = 5,  fire_radius = 12, equip_gap = 2, equip_length = 5, equip_radius = 5 },  -- SG
-    [2]  = { fire_gap = 12, fire_radius = 18, equip_gap = 1, equip_length = 3, equip_radius = 3 },  -- SSG: big spread
-    [4]  = { fire_gap = 4,  fire_radius = 11, equip_gap = 2, equip_length = 6, equip_radius = 6 },  -- NG
-    [8]  = { fire_gap = 3,  fire_radius = 10, equip_gap = 2, equip_length = 6, equip_radius = 6 },  -- SNG: tighter
-    [16] = { fire_gap = 10, fire_radius = 16, equip_gap = 1, equip_length = 4, equip_radius = 4 },  -- GL: wide arc
-    [32] = { fire_gap = 9,  fire_radius = 15, equip_gap = 1, equip_length = 4, equip_radius = 4 },  -- RL
-    [64] = { fire_gap = 2,  fire_radius = 8,  equip_gap = 3, equip_length = 7, equip_radius = 7 },  -- LG: tight beam
-}
-
-Reticle.IDLE = { gap = 4, length = 8, radius = 10 }
-
-function Reticle.GetProfile(weapon)
-    return Reticle.PROFILES[weapon] or Reticle.PROFILES.default
-end
-
-function Reticle.Think(event, element, document)
-    local ch = document:GetElementById('crosshair-container')
-    if not ch then return end
-
-    local profile = Reticle.GetProfile(game.active_weapon)
-
-    if game.fire_flash then
-        Reticle.ApplyFiring(ch, profile)
-    elseif game.weapon_show then
-        Reticle.ApplyEquipping(ch, profile)
-    else
-        Reticle.ApplyIdle(ch)
-    end
-end
-
-function Reticle.ApplyFiring(container, profile)
-    -- Set per-weapon fire spread on each primitive type
-    local lines = container:GetElementsByTagName('reticle-line')
-    for _, line in ipairs(lines) do
-        line.style['reticle-gap'] = profile.fire_gap .. 'dp'
-    end
-
-    local rings = container:GetElementsByTagName('reticle-ring')
-    for _, ring in ipairs(rings) do
-        ring.style['reticle-radius'] = profile.fire_radius .. 'dp'
-    end
-end
-
-function Reticle.ApplyEquipping(container, profile)
-    local lines = container:GetElementsByTagName('reticle-line')
-    for _, line in ipairs(lines) do
-        line.style['reticle-gap'] = profile.equip_gap .. 'dp'
-        line.style['reticle-length'] = profile.equip_length .. 'dp'
-    end
-
-    local rings = container:GetElementsByTagName('reticle-ring')
-    for _, ring in ipairs(rings) do
-        ring.style['reticle-radius'] = profile.equip_radius .. 'dp'
-    end
-end
-
-function Reticle.ApplyIdle(container)
-    local lines = container:GetElementsByTagName('reticle-line')
-    for _, line in ipairs(lines) do
-        line.style['reticle-gap'] = Reticle.IDLE.gap .. 'dp'
-        line.style['reticle-length'] = Reticle.IDLE.length .. 'dp'
-    end
-
-    local rings = container:GetElementsByTagName('reticle-ring')
-    for _, ring in ipairs(rings) do
-        ring.style['reticle-radius'] = Reticle.IDLE.radius .. 'dp'
-    end
-end
-```
-
-**In `hud.rml`:**
+**In `ui/rml/hud/hud.rml`:**
 
 ```xml
-<script src="../../lua/reticle_controller.lua"/>
-
-<!-- Remove data-class-firing/equipping — Lua handles it now -->
 <div id="crosshair-container" class="crosshair" data-if="reticle_style > 0"
-     onupdate="Reticle.Think(event, element, document)">
+     data-class-firing="weapon_firing"
+     data-class-equipping="weapon_show">
     <!-- reticle elements unchanged -->
 </div>
 ```
 
-RCSS transitions still handle the interpolation — Lua just sets the
-target values. The `transition` rule on all reticle properties means
-the Lua-set inline styles animate smoothly, with no per-frame stepping.
+**In `ui/rcss/hud.rcss`:**
+
+```css
+/* Fire animation: expand outward (data-class binding toggles .firing) */
+.crosshair.firing reticle-line { reticle-gap: 7dp; }
+.crosshair.firing reticle-ring { reticle-radius: 14dp; }
+
+/* Equip animation: collapse then restore */
+.crosshair.equipping reticle-line { reticle-gap: 1dp; reticle-length: 3dp; }
+.crosshair.equipping reticle-ring { reticle-radius: 3dp; }
+```
+
+RCSS transitions handle the interpolation. A single generic `.firing`
+rule gives uniform expand-on-fire for all weapons.
+
+### Mod Example (ui_lab): Lua-Enhanced Per-Weapon Reticle
+
+Mods can replace the declarative approach with a Lua controller for
+per-weapon reticle profiles. The `ui_lab` mod demonstrates this —
+see `ui_lab/ui/lua/reticle_controller.lua`.
+
+The controller maps `game.weapon_firing` state to per-weapon CSS
+classes (`.firing-sg`, `.firing-ssg`, etc.) via `engine.on_frame`,
+letting each weapon have distinct spread/collapse values in RCSS.
 
 ```
  Lua sets target    RCSS transition    Procedural geometry
@@ -1416,8 +1403,8 @@ A single RML document can reference multiple models:
 ### Action Strings
 
 Existing `onclick="navigate('options')"` action strings continue to
-work. MenuEventHandler still dispatches them. Lua handlers can call
-the same actions:
+work. The Lua action globals bridge them through `MenuEventHandler`.
+Lua handlers can call the same actions:
 
 ```lua
 -- These are equivalent:
@@ -1477,45 +1464,21 @@ mods have always been fully trusted.
 
 ## Implementation Phases
 
-### Phase 1: Enable Lua (Build + Bootstrap)
+### Phase 1: Enable Lua (Build + Bootstrap) — Complete
 
-**Scope:** Flip the build flag, add Lua dependency, initialize the
-plugin. No engine bridge yet.
+**Shipped.** Lua dependency, build integration, `Rml::Lua::Initialise()`,
+`<script>` tags, inline event handlers, full DOM API, `OpenDataModel`,
+and `rmlui.*` globals are all in place.
 
-**What modders get:**
-- `<script>` tags (inline and external)
-- Inline event handlers with Lua code
-- Full DOM manipulation API (Element, Document, Context)
-- `Context:OpenDataModel()` for Lua-driven data models
-- Custom element instancers from Lua
-- `rmlui.*` globals (contexts, key identifiers)
+### Phase 2: Engine Bridge — Complete
 
-**What's missing:**
-- No `game.*` table (must read from DOM text nodes)
-- No `engine.exec()` (must use action strings)
-
-**Files changed:**
-- `meson_options.txt` — add `use_lua` option
-- `meson.build` — Lua dep, CMake flag, link `librmlui_lua.a`
-- `src/ui_manager.cpp` — `Rml::Lua::Initialise()` / `Shutdown()`
-- CI workflows — add Lua packages
-
-### Phase 2: Engine Bridge
-
-**Scope:** Add the `game` and `engine` globals so Lua scripts can
-access engine state and execute commands directly.
-
-**What modders get:**
-- `game.health`, `game.weapon_label`, etc. (read-only)
-- `engine.exec("map e1m1")`
-- `engine.cvar_get("sensitivity")`
-- `engine.cvar_set("crosshair", "2")`
-- `engine.time()` for timing/animation
-
-**Files changed:**
-- `src/internal/lua_bridge.h/.cpp` — new (~80 lines)
-- `src/ui_manager.cpp` — call `LuaBridge::Initialize()` / `Update()`
-- `meson.build` — add `lua_bridge.cpp` to sources
+**Shipped.** The `game` table (read-only, 50+ fields) and `engine`
+table (`exec`, `cvar_get`, `cvar_get_number`, `cvar_set`, `time`,
+`on_frame`) are registered. Action globals bridge menu action strings
+through `MenuEventHandler`. The `ui_lab` mod's reticle controller
+(`ui_lab/ui/lua/reticle_controller.lua`) demonstrates Lua-driven
+per-weapon reticle profiles. The base HUD uses declarative
+`data-class` bindings instead (no Lua dependency).
 
 ### Phase 3: Lifecycle Hooks (Future)
 
@@ -1551,7 +1514,7 @@ larger change than Phases 1-2.
 |------------|--------|------------|
 | Single Lua state | RmlUI plugin design | Use `MyMod = MyMod or {}` namespacing |
 | No custom decorators | Decorator API is C++ only | Use `element.style` for per-element effects |
-| No shader access | Rendering is C++ `RenderInterface_VK` | Use CSS animations + Lottie |
+| No shader access | Rendering is C++ `RenderInterface_VK` | Use RCSS animations + custom RmlUI elements |
 | Style values are strings | RmlUI proxy design | Parse with `tonumber()` when needed |
 | `ElementPtr` ownership moves | Memory safety | Don't use ptr after AppendChild/InsertBefore |
 | No async/timers | No Lua scheduler | Poll in `onupdate` handler, use `engine.time()` |
@@ -1581,7 +1544,7 @@ larger change than Phases 1-2.
 
 ## Files Reference
 
-### New Files (Phases 1-2)
+### Lua Bridge
 
 ```
  src/internal/lua_bridge.h          LuaBridge API declaration
@@ -1606,13 +1569,16 @@ larger change than Phases 1-2.
  lib/rmlui/Samples/lua_invaders/   Working example (reference)
 ```
 
-### ui_lab Example Files (New)
+### ui_lab Example Files
+
+The `ui_lab` mod demonstrates Lua scripting in the Terminal Visor HUD.
 
 ```
- ui_lab/ui/lua/                     Lua scripts directory
- ui_lab/ui/lua/damage_flash.lua     Example 1: damage overlay
- ui_lab/ui/lua/kill_feed.lua        Example 2: rolling kill feed
- ui_lab/ui/lua/stats_tracker.lua    Example 3: session stats overlay
- ui_lab/ui/lua/visor_effects.lua    Example 4: scanline animation
- ui_lab/ui/lua/weapon_wheel.lua     Example 6: dynamic weapon selector
+ ui_lab/ui/lua/                          Lua scripts directory
+ ui_lab/ui/lua/reticle_controller.lua    Per-weapon reticle profiles (shipped)
+ ui_lab/ui/lua/damage_flash.lua          Example: damage overlay (planned)
+ ui_lab/ui/lua/kill_feed.lua             Example: rolling kill feed (planned)
+ ui_lab/ui/lua/stats_tracker.lua         Example: session stats overlay (planned)
+ ui_lab/ui/lua/visor_effects.lua         Example: scanline animation (planned)
+ ui_lab/ui/lua/weapon_wheel.lua          Example: dynamic weapon selector (planned)
 ```

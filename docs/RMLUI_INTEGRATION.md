@@ -308,9 +308,26 @@ RmlUI actions are typically authored inline in RML using `onclick` or `data-even
 ```
 
 `MenuEventHandler` resolves actions in this order:
-1. `data-event-<type>` (e.g., `data-event-click`, `data-event-change`)
-2. `on<type>` (e.g., `onclick`, `onchange`)
-3. Fallbacks: `data-action`, then `onclick`
+1. `data-event-<type>` (e.g., `data-event-click`, `data-event-change`) — always active
+2. `on<type>` (e.g., `onclick`, `onchange`) — **non-Lua builds only**
+3. Fallbacks: `data-action`, then `onclick` — **non-Lua builds only**
+
+### Event Ownership (Lua vs Non-Lua)
+
+In **Lua builds** (`USE_LUA`), RmlUI's Lua EventListenerInstancer compiles `onclick`
+attributes into Lua closures.  Those closures call Lua globals (`navigate`, `close`,
+`new_game`, etc.) which route back through `MenuEventHandler::ProcessAction()`.
+The capture-phase fallback for `on*`/`data-action`/`onclick` is disabled (`#ifndef USE_LUA`)
+to prevent the same action from firing twice.
+
+In **non-Lua builds**, the capture-phase listener handles all attribute types.
+
+**Mod authoring guidance:**
+- Use `data-event-click` for C++ action dispatch (works in all builds).
+- Use `onclick` for Lua scripting (Lua builds interpret these as Lua code).
+- Do **not** mix `data-event-click` and `onclick` on the same element — both would fire.
+- Data model event callbacks (`load_slot`, `save_slot`, `select_mod`) are handled by
+  `GameDataModel::BindEventCallback` and silently ignored if they reach `ExecuteAction`.
 
 ### Supported Actions
 
@@ -328,7 +345,10 @@ RmlUI actions are typically authored inline in RML using `onclick` or `data-even
 
 ### Event Dispatch
 
-`MenuEventHandler::RegisterWithDocument()` attaches document listeners for click/change and dispatches parsed action strings to `MenuEventHandler::ExecuteAction()`.
+`MenuEventHandler::RegisterWithDocument()` attaches document-level capture-phase listeners
+for click, change, and focus events.  Click events are dispatched to `ExecuteAction()`.
+Unknown action names (e.g. data model callbacks like `load_slot`) are silently ignored
+rather than logged as errors.
 
 Reference: [RmlUI Events Documentation](https://mikke89.github.io/RmlUiDoc/pages/cpp_manual/events.html)
 

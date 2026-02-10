@@ -112,6 +112,7 @@ Mods at project root use RmlUI automatically (always active when compiled with `
 ## Skills
 
 - `/rmlui` — Use when editing RCSS/RML files (RmlUI has many syntax differences from standard CSS)
+- `/qlua` — Use when editing Lua scripts or `<script>` blocks in RML documents
 - `/commit` — Build-verify and commit with submodule-aware workflow
 
 ## Key Documentation
@@ -119,3 +120,4 @@ Mods at project root use RmlUI automatically (always active when compiled with `
 - `docs/RMLUI_INTEGRATION.md` — Input handling, menu stack, data binding, full API reference
 - `docs/DATA_CONTRACT.md` — Engine-to-UI data flow, binding reference
 - `.claude/skills/rmlui/SKILL.md` — RmlUI/RCSS syntax rules and gotchas
+- `.claude/skills/qlua/SKILL.md` — Lua scripting philosophy and API gotchas
