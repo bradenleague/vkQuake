@@ -17,6 +17,11 @@ namespace Paths
 /* ── HUD document ─────────────────────────────────────────────────── */
 inline constexpr const char *kHud = "ui/rml/hud/hud.rml";
 
+/* ── HUD child documents (isolated layout domains) ───────────────── */
+inline constexpr const char *kHudNotify = "ui/rml/hud/notify.rml";
+inline constexpr const char *kHudCenterprint = "ui/rml/hud/centerprint.rml";
+inline constexpr const char *kHudChat = "ui/rml/hud/chat.rml";
+
 /* ── HUD overlays ─────────────────────────────────────────────────── */
 inline constexpr const char *kScoreboard = "ui/rml/hud/scoreboard.rml";
 inline constexpr const char *kIntermission = "ui/rml/hud/intermission.rml";

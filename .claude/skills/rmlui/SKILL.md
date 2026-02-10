@@ -190,6 +190,44 @@ doc->SetClass("weapon-switched", true);    // Animation fires
 - Elements created/destroyed by `data-if` replay `@keyframes` on each creation
 - Apply `animation:` directly — no class toggle needed (e.g., notify lines, centerprint)
 
+## Layout Performance
+
+RmlUI's layout engine has no dirty-subtree tracking. When any element's layout-affecting property changes (e.g. `display` via `data-if`), the **entire owning document** is relaid out — every element, recursively. This is fine for most cases, but worth understanding when authoring HUD documents.
+
+### How `data-if` triggers layout
+
+```
+data-if condition changes
+  → SetProperty(Display, none/remove)
+    → DirtyProperty(Display)
+      → Display is in layout-forcing property set
+        → Element::DirtyLayout()
+          → ElementDocument::DirtyLayout()  // document-wide flag
+            → LayoutEngine::FormatElement(document)  // full recursive relayout
+```
+
+The cost scales with total element count in the document, not just the toggled element.
+
+### Document isolation pattern
+
+Since `layout_dirty` is per-document, splitting frequently-toggling components into separate RML documents limits the blast radius. Each document can share the same `data-model` — data binding propagation crosses document boundaries, but layout does not.
+
+**Current HUD structure** uses this pattern:
+- `hud.rml` — health, armor, weapons, ammo, keys, powerups, crosshair (core HUD)
+- `notify.rml` — 4 notify lines (toggle on item pickup / kills)
+- `centerprint.rml` — centerprint banner (toggle on level triggers)
+- `chat.rml` — chat input (toggle on chat open)
+
+All four share `data-model="game"` and render as overlays. A `data-if` toggle in notify.rml only relayouts ~6 elements instead of the full HUD.
+
+### Guidelines
+
+- **`data-if` is fine for infrequent toggles** (armor appearing, powerup badges, reticle style changes). Don't over-optimize.
+- **For frequently-toggling elements** (notifications, messages), consider isolating into a separate document if profiling shows spikes.
+- **`data-class` does not trigger layout** unless the class change affects a layout-forcing property (display, width, height, padding, margin, etc.). Toggling opacity or color via `data-class` is cheap.
+- **`data-if` vs `data-class` for visibility**: `data-if` creates/destroys elements (replays entry animations, triggers layout). Toggling `opacity: 0` via `data-class` avoids layout but the element still occupies space.
+- **Profile with `ui_speeds 3`** to see `context` time. Average should be sub-0.1ms; spikes during gameplay events are normal.
+
 ## Unsupported Properties
 
 | Property | Alternative |

@@ -3,9 +3,6 @@
     <title>HUD</title>
     <link type="text/rcss" href="../../rcss/base.rcss"/>
     <link type="text/rcss" href="../../rcss/hud.rcss"/>
-    <link type="text/rcss" href="../../rcss/centerprint.rcss"/>
-    <link type="text/rcss" href="../../rcss/notify.rcss"/>
-    <link type="text/rcss" href="../../rcss/chat.rcss"/>
 </head>
 <body id="hud" data-model="game" class="hud-overlay hud-default">
 
@@ -135,14 +132,6 @@
                 <span class="level-stat-value">{{ secrets }}/{{ total_secrets }}</span>
             </div>
         </div>
-
-        <!-- Notify Messages (flow below stats) -->
-        <div class="notify-area">
-            <div class="notify-line" data-if="notify_0_visible" data-class-fading="notify_0_fading">{{ notify_0 }}</div>
-            <div class="notify-line" data-if="notify_1_visible" data-class-fading="notify_1_fading">{{ notify_1 }}</div>
-            <div class="notify-line" data-if="notify_2_visible" data-class-fading="notify_2_fading">{{ notify_2 }}</div>
-            <div class="notify-line" data-if="notify_3_visible" data-class-fading="notify_3_fading">{{ notify_3 }}</div>
-        </div>
     </div>
 
     <!-- ========== Crosshair (center screen) ========== -->
@@ -173,19 +162,6 @@
             <reticle-arc class="lower" />
             <reticle-dot />
         </reticle>
-    </div>
-
-    <!-- ========== Centerprint (center screen) ========== -->
-    <div class="centerprint-area hud-center" data-if="centerprint_visible" data-class-fading="centerprint_fading">
-        <div class="centerprint-frame">
-            <div class="centerprint-text">{{ centerprint }}</div>
-        </div>
-    </div>
-
-    <!-- ========== Chat Input ========== -->
-    <div class="chat-input" data-if="chat_active">
-        <span class="chat-prefix">{{ chat_prefix }}</span>
-        <span class="chat-text">{{ chat_text }}</span>
     </div>
 
 </body>

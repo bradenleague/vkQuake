@@ -5,6 +5,10 @@ id1/
 # Standard Quake convention — each mod is its own directory
 tatoosh/
 rm1.2/
+demo/
+
+# Local-only docs
+docs/Demo_doc.md
 
 # Build directories
 build/

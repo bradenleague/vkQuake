@@ -1,0 +1,13 @@
+<rml>
+<head>
+    <title>Chat</title>
+    <link type="text/rcss" href="../../rcss/base.rcss"/>
+    <link type="text/rcss" href="../../rcss/chat.rcss"/>
+</head>
+<body data-model="game" class="hud-overlay">
+    <div class="chat-input" data-if="chat_active">
+        <span class="chat-prefix">{{ chat_prefix }}</span>
+        <span class="chat-text">{{ chat_text }}</span>
+    </div>
+</body>
+</rml>

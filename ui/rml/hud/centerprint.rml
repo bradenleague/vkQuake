@@ -1,0 +1,15 @@
+<rml>
+<head>
+    <title>Centerprint</title>
+    <link type="text/rcss" href="../../rcss/base.rcss"/>
+    <link type="text/rcss" href="../../rcss/hud.rcss"/>
+    <link type="text/rcss" href="../../rcss/centerprint.rcss"/>
+</head>
+<body data-model="game" class="hud-overlay">
+    <div class="centerprint-area hud-center" data-if="centerprint_visible" data-class-fading="centerprint_fading">
+        <div class="centerprint-frame">
+            <div class="centerprint-text">{{ centerprint }}</div>
+        </div>
+    </div>
+</body>
+</rml>

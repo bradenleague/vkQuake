@@ -24,6 +24,19 @@ RmlUI is a **retained-mode** UI framework, not an immediate-mode one (like Dear 
 
 This architecture means the per-frame cost is proportional to the number of changed data bindings, not the total DOM size.
 
+### Multi-Document HUD
+
+The HUD is split across four documents that share `data-model="game"`:
+
+| Document | Contents | Why isolated |
+|----------|----------|--------------|
+| `hud.rml` | Health, armor, weapons, ammo, keys, powerups, crosshair | Core HUD — infrequent `data-if` toggles |
+| `notify.rml` | 4 notification lines | `data-if` toggles on every item pickup / kill |
+| `centerprint.rml` | Centerprint banner | `data-if` toggles on level triggers |
+| `chat.rml` | Chat input | `data-if` toggles on chat open/close |
+
+RmlUI's `layout_dirty` flag is per-document. A `data-if` toggle in one document triggers a full relayout of that document only, not the others. This keeps the frequently-toggling notify/centerprint/chat from causing layout recalculation across the larger core HUD. All four are loaded together by `UI_ShowHUD()` and hidden together by `UI_HideHUD()`.
+
 ## Input Handling System
 
 ### The Problem
@@ -438,7 +451,6 @@ ui/
 │   ├── hud.rcss          # HUD positioning
 │   └── widgets.rcss      # Form elements (sliders, checkboxes)
 └── rml/
-    ├── hud.rml
     ├── menus/
     │   ├── main_menu.rml
     │   ├── pause_menu.rml
@@ -460,6 +472,10 @@ ui/
     │   ├── confirm_reset.rml
     │   └── quit.rml
     └── hud/
+        ├── hud.rml            # Core HUD (health, armor, weapons, keys, powerups, crosshair)
+        ├── notify.rml         # Notify lines (isolated layout domain)
+        ├── centerprint.rml    # Centerprint banner (isolated layout domain)
+        ├── chat.rml           # Chat input (isolated layout domain)
         ├── scoreboard.rml
         └── intermission.rml
 ```

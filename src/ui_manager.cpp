@@ -81,6 +81,9 @@ struct UIManagerState
 	// HUD & overlay
 	std::string current_hud;
 	bool		hud_visible = false;
+	bool		notify_visible = false;
+	bool		centerprint_visible = false;
+	bool		chat_visible = false;
 	bool		scoreboard_visible = false;
 	bool		intermission_visible = false;
 	int			last_intermission = 0;
@@ -1115,6 +1118,18 @@ extern "C"
 						QRmlUI::MenuEventHandler::Initialize (g_state.context);
 					}
 					g_state.assets_loaded = true;
+
+					// Pre-warm HUD documents: load + one context update while
+					// hidden so the first-use style/layout spike happens here
+					// instead of on the first live gameplay frame.
+					if (g_state.context && UI_LoadDocument (QRmlUI::Paths::kHud))
+					{
+						UI_LoadDocument (QRmlUI::Paths::kHudNotify);
+						UI_LoadDocument (QRmlUI::Paths::kHudCenterprint);
+						UI_LoadDocument (QRmlUI::Paths::kHudChat);
+						g_state.context->Update ();
+						Con_DPrintf ("UI_InitializeVulkan: HUD pre-warmed\n");
+					}
 				}
 			}
 			else
@@ -1416,6 +1431,27 @@ extern "C"
 			UI_SetInputMode (UI_INPUT_OVERLAY);
 		}
 
+		// Load and show child HUD documents (isolated layout domains).
+		// Show order = render order; children render on top of main HUD.
+		if (g_state.hud_visible)
+		{
+			if (UI_LoadDocument (QRmlUI::Paths::kHudNotify))
+			{
+				UI_ShowDocument (QRmlUI::Paths::kHudNotify, 0);
+				g_state.notify_visible = true;
+			}
+			if (UI_LoadDocument (QRmlUI::Paths::kHudCenterprint))
+			{
+				UI_ShowDocument (QRmlUI::Paths::kHudCenterprint, 0);
+				g_state.centerprint_visible = true;
+			}
+			if (UI_LoadDocument (QRmlUI::Paths::kHudChat))
+			{
+				UI_ShowDocument (QRmlUI::Paths::kHudChat, 0);
+				g_state.chat_visible = true;
+			}
+		}
+
 		// Reset intermission tracking on new game/map
 		g_state.last_intermission = 0;
 	}
@@ -1428,6 +1464,21 @@ extern "C"
 		{
 			UI_HideDocument (g_state.current_hud.c_str ());
 			g_state.hud_visible = false;
+		}
+		if (g_state.notify_visible)
+		{
+			UI_HideDocument (QRmlUI::Paths::kHudNotify);
+			g_state.notify_visible = false;
+		}
+		if (g_state.centerprint_visible)
+		{
+			UI_HideDocument (QRmlUI::Paths::kHudCenterprint);
+			g_state.centerprint_visible = false;
+		}
+		if (g_state.chat_visible)
+		{
+			UI_HideDocument (QRmlUI::Paths::kHudChat);
+			g_state.chat_visible = false;
 		}
 		if (g_state.intermission_visible)
 		{
