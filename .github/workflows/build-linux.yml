@@ -22,6 +22,9 @@ jobs:
         push: false
         cache-from: type=gha
         cache-to: type=gha
+    # Note: 'make lua-test' is a local-only test (requires Vulkan GPU, display
+    # server, and id1/ game assets). CI verifies Lua compiles correctly;
+    # runtime Lua tests must be run locally via 'make lua-test'.
     - name: Build vkQuake
       run: docker run --rm --privileged -e VERSION=${GITHUB_SHA::8} -v "$PWD:/usr/src/vkQuake" build-vkquake /usr/src/vkQuake/Packaging/AppImage/run-in-docker.sh
     - name: Upload vkQuake

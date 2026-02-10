@@ -4,6 +4,7 @@
 #   make          Build everything
 #   make run      Build and run (set MOD_NAME to select mod)
 #   make smoke    Build and run a startup smoke test (catches crash-on-launch)
+#   make lua-test Build and run Lua test suite (game parity, engine API, actions)
 #   make engine   Build the engine (+ embedded RmlUI deps)
 #   make libs     Alias for engine build (for compatibility)
 #   make assemble Ensure id1/ base assets exist
@@ -27,7 +28,7 @@ CLANG_FORMAT := .venv/bin/clang-format
 FORMAT_DIRS  := Quake Shaders src
 FORMAT_EXTS  := h,c,cpp
 
-.PHONY: all libs engine run smoke clean distclean setup meson-setup assemble check-submodules format format-check format-venv
+.PHONY: all libs engine run smoke lua-test clean distclean setup meson-setup assemble check-submodules format format-check format-venv
 
 # --- Submodule guard ---
 check-submodules:
@@ -90,6 +91,21 @@ smoke: all assemble
 		echo "Smoke test: PASSED"; \
 	else \
 		echo "Smoke test: FAILED (exit code $$STATUS)"; \
+		exit 1; \
+	fi
+
+# Lua test — launch engine, run lua_test, then quit. Checks output for pass/fail.
+lua-test: all assemble
+	@echo "Lua test: launching engine..."
+	@timeout 30 ./build/vkquake -basedir . $(WAIT_CMDS) +lua_test +wait +wait +wait +wait +wait +quit 2>&1 | tee /tmp/lua_test_output.txt; \
+	STATUS=$${PIPESTATUS[0]}; \
+	if grep -q "ALL TESTS PASSED" /tmp/lua_test_output.txt; then \
+		echo "Lua test: PASSED"; \
+	elif [ $$STATUS -ne 0 ]; then \
+		echo "Lua test: FAILED (exit code $$STATUS)"; \
+		exit 1; \
+	else \
+		echo "Lua test: FAILED (tests did not pass)"; \
 		exit 1; \
 	fi
 
