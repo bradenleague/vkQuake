@@ -19,12 +19,17 @@
 #include <RmlUi/Core.h>
 #include <RmlUi/Debugger.h>
 
+// Lottie plugin — compiled into librmlui.a when RMLUI_LOTTIE_PLUGIN=ON
+namespace Rml { namespace Lottie { void Initialise(); } }
+
 #include <SDL.h>
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <cstring>
+#include <filesystem>
 #include <unordered_map>
+#include <set>
 #include <string>
 #include <vector>
 #include <memory>
@@ -86,6 +91,7 @@ struct UIManagerState
 	double				  last_resize_time = -1.0;
 	int					  weapon_flicker_frames = 0;
 	int					  ammo_detail_frames = 0;
+	int					  face_pain_frames = 0;
 
 	// Document & asset tracking
 	std::unordered_map<std::string, Rml::ElementDocument *> documents;
@@ -233,6 +239,9 @@ extern "C"
 		Rml::SetSystemInterface (g_state.system_interface.get ());
 		Rml::SetRenderInterface (g_state.render_interface.get ());
 
+		// Register Lottie plugin (must be before Rml::Initialise)
+		Rml::Lottie::Initialise ();
+
 		// Initialize RmlUI
 		if (!Rml::Initialise ())
 		{
@@ -263,20 +272,83 @@ extern "C"
 
 	// Load fonts - called AFTER Vulkan is initialized.
 	// Uses the QuakeFileInterface which searches com_gamedir → com_basedir → CWD.
+	//
+	// Base fonts are loaded first (required for menus/base HUD), then any
+	// additional .ttf/.otf files found in ui/fonts/ directories are loaded
+	// automatically. This lets mods drop fonts into their own ui/fonts/
+	// without needing C++ changes.
 	static void UI_LoadAssets ()
 	{
-		static const char *fonts[] = {
+		static const char *base_fonts[] = {
 			"ui/fonts/LatoLatin-Regular.ttf",	 "ui/fonts/LatoLatin-Bold.ttf",	   "ui/fonts/LatoLatin-Italic.ttf",
 			"ui/fonts/LatoLatin-BoldItalic.ttf", "ui/fonts/SpaceGrotesk-Bold.ttf",
 		};
 
 		bool any_loaded = false;
-		for (const char *font : fonts)
+		for (const char *font : base_fonts)
 		{
 			if (Rml::LoadFontFace (font))
 			{
 				Con_DPrintf ("UI_LoadAssets: Loaded %s\n", font);
 				any_loaded = true;
+			}
+		}
+
+		// Discover additional fonts from ui/fonts/ in basedir and gamedir.
+		// Scan basedir first, then gamedir (mod fonts overlay base fonts).
+		// Track loaded filenames to avoid double-loading.
+		{
+			namespace fs = std::filesystem;
+			std::set<std::string> loaded_filenames;
+
+			// Record base font filenames so we don't reload them
+			for (const char *font : base_fonts)
+			{
+				fs::path p (font);
+				loaded_filenames.insert (p.filename ().string ());
+			}
+
+			auto scan_font_dir = [&] (const char *root_dir)
+			{
+				if (!root_dir || !root_dir[0])
+					return;
+
+				fs::path font_dir = fs::path (root_dir) / "ui" / "fonts";
+				std::error_code ec;
+				if (!fs::is_directory (font_dir, ec))
+					return;
+
+				for (const auto &entry : fs::directory_iterator (font_dir, ec))
+				{
+					if (!entry.is_regular_file (ec))
+						continue;
+
+					std::string ext = entry.path ().extension ().string ();
+					// Case-insensitive extension check
+					std::transform (ext.begin (), ext.end (), ext.begin (), ::tolower);
+					if (ext != ".ttf" && ext != ".otf")
+						continue;
+
+					std::string filename = entry.path ().filename ().string ();
+					if (loaded_filenames.count (filename))
+						continue;
+
+					// Build the relative path that QuakeFileInterface expects
+					std::string rel_path = "ui/fonts/" + filename;
+					if (Rml::LoadFontFace (rel_path))
+					{
+						Con_DPrintf ("UI_LoadAssets: Discovered %s\n", rel_path.c_str ());
+						loaded_filenames.insert (filename);
+						any_loaded = true;
+					}
+				}
+			};
+
+			scan_font_dir (com_basedir);
+			// Only scan gamedir if it differs from basedir (avoids double-scan)
+			if (com_gamedir[0] && strcmp (com_gamedir, com_basedir) != 0)
+			{
+				scan_font_dir (com_gamedir);
 			}
 		}
 
@@ -513,6 +585,33 @@ extern "C"
 				if (it != g_state.documents.end () && it->second)
 				{
 					it->second->SetClass ("ammo-detail-visible", false);
+				}
+			}
+		}
+
+		// Face pain visor glitch — toggle "face-pain" class on HUD doc.
+		// Same pattern as weapon-switched: remove class, wait 2 frames,
+		// re-add to retrigger the CSS @keyframes animation.
+		{
+			if (QRmlUI::g_game_state.face_pain && g_state.face_pain_frames == 0)
+			{
+				auto it = g_state.documents.find (g_state.current_hud);
+				if (it != g_state.documents.end () && it->second)
+				{
+					it->second->SetClass ("face-pain", false);
+				}
+				g_state.face_pain_frames = 2;
+			}
+		}
+		if (g_state.face_pain_frames > 0)
+		{
+			g_state.face_pain_frames--;
+			if (g_state.face_pain_frames == 0)
+			{
+				auto it = g_state.documents.find (g_state.current_hud);
+				if (it != g_state.documents.end () && it->second)
+				{
+					it->second->SetClass ("face-pain", true);
 				}
 			}
 		}
@@ -848,6 +947,7 @@ extern "C"
 		// Clear caches so RmlUI re-reads files from disk
 		Rml::Factory::ClearStyleSheetCache ();
 		Rml::Factory::ClearTemplateCache ();
+		Rml::ReleaseTextures ();
 
 		// Invalidate deferred pointer — documents are about to be replaced.
 		g_state.pending_menu_enter = nullptr;

@@ -146,7 +146,7 @@
     </div>
 
     <!-- ========== Crosshair (center screen) ========== -->
-    <div class="crosshair" data-if="reticle_src != ''">
+    <div class="crosshair" data-if="reticle_style > 0">
         <lottie data-attr-src="reticle_src"/>
     </div>
 

@@ -670,6 +670,16 @@ extern "C"
 		g_game_state.time_minutes = total_seconds / 60;
 		g_game_state.time_seconds = total_seconds % 60;
 
+		// Detect damage taken (health decreased since last sync).
+		// Threshold of 2 HP filters out megahealth decay (1 HP/sec tick-down)
+		// while catching real damage (minimum 5 HP in Quake).
+		{
+			static int s_prev_health = 100;
+			int		   drop = s_prev_health - g_game_state.health;
+			g_game_state.face_pain = (drop >= 2 && s_prev_health > 0);
+			s_prev_health = g_game_state.health;
+		}
+
 		// Resolve reticle style from crosshair cvar + per-weapon overrides
 		g_game_state.reticle_style = ResolveReticleStyle (g_game_state.active_weapon, CvarBindingManager::GetProvider ());
 
