@@ -1,0 +1,90 @@
+/*
+ * vkQuake RmlUI - Intermission & Finale Stylesheet
+ *
+ * Full-screen overlays for level completion and episode end text.
+ */
+
+.intermission-overlay {
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 242);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    animation: fade-in 0.3s ease-out;
+}
+
+.intermission-title {
+    font-size: 72dp;
+    font-weight: bold;
+    color: #ffffff;
+    margin-bottom: 48dp;
+    text-transform: uppercase;
+    letter-spacing: 8dp;
+}
+
+.intermission-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 16dp;
+    font-size: 28dp;
+    min-width: 500dp;
+}
+
+.intermission-stat {
+    display: flex;
+    justify-content: space-between;
+    gap: 64dp;
+    padding: 12dp 0;
+    border-bottom: 2dp #333333;
+}
+
+.intermission-stat-label {
+    color: #666666;
+    text-transform: uppercase;
+    letter-spacing: 2dp;
+}
+
+.intermission-stat-value {
+    color: #ffffff;
+    font-weight: bold;
+}
+
+.intermission-time {
+    color: #ffcc00;
+}
+
+.intermission-continue {
+    margin-top: 64dp;
+    font-size: 20dp;
+    color: #999999;
+    text-transform: uppercase;
+    letter-spacing: 4dp;
+    animation: blink 1.2s step-start infinite;
+}
+
+/* ============================================
+   Finale Overlay - EPISODE END TEXT
+   ============================================ */
+
+.finale-overlay {
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 242);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 64dp;
+    animation: fade-in 0.3s ease-out;
+}
+
+.finale-text {
+    font-size: 20dp;
+    color: #ffffff;
+    text-align: center;
+    max-width: 600dp;
+    line-height: 1.6em;
+    font-effect: outline(1dp #000000);
+}

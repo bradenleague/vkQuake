@@ -1,8 +1,11 @@
 /*
- * vkQuake RmlUI - HUD Stylesheet
+ * vkQuake RmlUI - HUD Core Stylesheet
  *
- * BRUTAL & BOLD sci-fi aesthetic
- * Clean, high-contrast, no-nonsense design
+ * Shared HUD infrastructure: overlay container, positioning utilities,
+ * crosshair, level stats, and weapon switch flicker.
+ *
+ * Component styles (centerprint, notify, chat, scoreboard, intermission)
+ * live in their own RCSS files.
  */
 
 /* ============================================
@@ -84,234 +87,6 @@
 }
 
 /* ============================================
-   Status Bar - BRUTAL MINIMAL
-   ============================================ */
-
-.status-bar {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 64dp;
-    background-color: rgba(0, 0, 0, 0.85);
-    border-top: 3dp #ffffff;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 32dp;
-}
-
-.status-bar-section {
-    display: flex;
-    align-items: center;
-    gap: 32dp;
-}
-
-/* ============================================
-   Stat Display - BOLD NUMBERS
-   ============================================ */
-
-.stat-display {
-    display: flex;
-    align-items: baseline;
-    gap: 12dp;
-}
-
-.stat-icon {
-    width: 32dp;
-    height: 32dp;
-}
-
-.stat-value {
-    font-size: 48dp;
-    font-weight: bold;
-    min-width: 80dp;
-    text-align: right;
-    font-effect: outline(2dp #000000);
-}
-
-.stat-label {
-    font-size: 14dp;
-    color: #666666;
-    text-transform: uppercase;
-    letter-spacing: 2dp;
-    font-weight: bold;
-}
-
-/* Health - RED */
-.stat-health .stat-value {
-    color: #ff0000;
-}
-
-.stat-health.low .stat-value {
-    color: #ff3333;
-    animation: pulse 0.4s ease-in-out infinite;
-}
-
-.stat-health.critical .stat-value {
-    color: #ff0000;
-    animation: blink 0.25s step-start infinite;
-}
-
-/* Armor - WHITE */
-.stat-armor .stat-value {
-    color: #ffffff;
-    transition: color 0.2s quadratic-out;
-}
-
-.stat-armor.armor-green .stat-value {
-    color: #00ff00;
-}
-
-.stat-armor.armor-yellow .stat-value {
-    color: #ffff00;
-}
-
-.stat-armor.armor-red .stat-value {
-    color: #ff0000;
-}
-
-/* Ammo - YELLOW */
-.stat-ammo .stat-value {
-    color: #ffcc00;
-}
-
-.stat-ammo.low .stat-value {
-    color: #ff6600;
-    animation: pulse 0.6s ease-in-out infinite;
-}
-
-/* ============================================
-   Weapon Bar - BLOCKY SLOTS
-   ============================================ */
-
-.weapon-bar {
-    display: flex;
-    gap: 2dp;
-}
-
-.weapon-slot {
-    width: 40dp;
-    height: 40dp;
-    background-color: rgba(255, 255, 255, 0.05);
-    border-width: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: background-color 0.1s quadratic-out, color 0.1s quadratic-out;
-}
-
-.weapon-slot.owned {
-    background-color: rgba(255, 255, 255, 0.15);
-}
-
-.weapon-slot.active {
-    background-color: #ffffff;
-}
-
-.weapon-slot-number {
-    font-size: 18dp;
-    font-weight: bold;
-    color: #333333;
-}
-
-.weapon-slot.owned .weapon-slot-number {
-    color: #888888;
-}
-
-.weapon-slot.active .weapon-slot-number {
-    color: #000000;
-}
-
-/* ============================================
-   Ammo Counts
-   ============================================ */
-
-.ammo-bar {
-    display: flex;
-    gap: 24dp;
-}
-
-.ammo-count {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.ammo-count-icon {
-    width: 24dp;
-    height: 24dp;
-    margin-bottom: 4dp;
-}
-
-.ammo-count-value {
-    font-size: 18dp;
-    font-weight: bold;
-    color: #ffffff;
-    font-effect: outline(1dp #000000);
-}
-
-.ammo-count.shells .ammo-count-value { color: #cc9933; }
-.ammo-count.nails .ammo-count-value { color: #999999; }
-.ammo-count.rockets .ammo-count-value { color: #ff3300; }
-.ammo-count.cells .ammo-count-value { color: #00ccff; }
-
-/* ============================================
-   Keys and Powerups - BOLD ICONS
-   ============================================ */
-
-.items-bar {
-    display: flex;
-    gap: 8dp;
-}
-
-.item-icon {
-    width: 32dp;
-    height: 32dp;
-    background-color: rgba(255, 255, 255, 0.1);
-    border-width: 0;
-    opacity: 0.2;
-}
-
-.item-icon.owned {
-    opacity: 1.0;
-    border: 2dp #ffffff;
-}
-
-/* Keys */
-.item-key-silver.owned {
-    background-color: #cccccc;
-}
-
-.item-key-gold.owned {
-    background-color: #ffcc00;
-}
-
-/* Powerups - GLOWING */
-.item-quad.owned {
-    background-color: #0066ff;
-    border: 2dp #00aaff;
-    animation: pulse 0.4s ease-in-out infinite;
-}
-
-.item-pent.owned {
-    background-color: #ff0000;
-    border: 2dp #ff6666;
-    animation: pulse 0.4s ease-in-out infinite;
-}
-
-.item-ring.owned {
-    background-color: #ffcc00;
-    border: 2dp #ffee66;
-    animation: pulse 0.6s ease-in-out infinite;
-}
-
-.item-suit.owned {
-    background-color: #00cc00;
-    border: 2dp #66ff66;
-}
-
-/* ============================================
    Crosshair - MINIMAL
    ============================================ */
 
@@ -371,37 +146,6 @@
 }
 
 /* ============================================
-   Messages - STARK CONTRAST
-   ============================================ */
-
-.messages-area {
-    position: absolute;
-    top: 24dp;
-    left: 24dp;
-    width: 450dp;
-    font-size: 16dp;
-    color: #ffffff;
-}
-
-.message {
-    background-color: rgba(0, 0, 0, 0.9);
-    padding: 10dp 16dp;
-    margin-bottom: 4dp;
-    border-left: 4dp #ffffff;
-    animation: fade-in 0.15s ease-out;
-}
-
-.message.pickup {
-    border-left-color: #00ff00;
-    color: #00ff00;
-}
-
-.message.death {
-    border-left-color: #ff0000;
-    color: #ff0000;
-}
-
-/* ============================================
    Level Stats
    ============================================ */
 
@@ -414,8 +158,7 @@
 
 .level-stat {
     display: flex;
-    justify-content: space-between;
-    gap: 16dp;
+    gap: 8dp;
 }
 
 .level-stat-label {
@@ -430,439 +173,6 @@
 }
 
 /* ============================================
-   Intermission - FULL TAKEOVER
-   ============================================ */
-
-.intermission-overlay {
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.95);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    animation: fade-in 0.3s ease-out;
-}
-
-.intermission-title {
-    font-size: 72dp;
-    font-weight: bold;
-    color: #ffffff;
-    margin-bottom: 48dp;
-    text-transform: uppercase;
-    letter-spacing: 8dp;
-}
-
-.intermission-stats {
-    display: flex;
-    flex-direction: column;
-    gap: 16dp;
-    font-size: 28dp;
-    min-width: 500dp;
-}
-
-.intermission-stat {
-    display: flex;
-    justify-content: space-between;
-    gap: 64dp;
-    padding: 12dp 0;
-    border-bottom: 2dp #333333;
-}
-
-.intermission-stat-label {
-    color: #666666;
-    text-transform: uppercase;
-    letter-spacing: 2dp;
-}
-
-.intermission-stat-value {
-    color: #ffffff;
-    font-weight: bold;
-}
-
-.intermission-time {
-    color: #ffcc00;
-}
-
-.intermission-continue {
-    margin-top: 64dp;
-    font-size: 20dp;
-    color: #999999;
-    text-transform: uppercase;
-    letter-spacing: 4dp;
-    animation: blink 1.2s step-start infinite;
-}
-
-/* ============================================
-   Finale Overlay - EPISODE END TEXT
-   ============================================ */
-
-.finale-overlay {
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.95);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    padding: 64dp;
-    animation: fade-in 0.3s ease-out;
-}
-
-.finale-text {
-    font-size: 20dp;
-    color: #ffffff;
-    text-align: center;
-    max-width: 600dp;
-    line-height: 1.6em;
-    font-effect: outline(1dp #000000);
-}
-
-/* ============================================
-   Scoreboard - CLEAN TABLE
-   ============================================ */
-
-.scoreboard-overlay {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: rgba(0, 0, 0, 0.95);
-    border: 3dp #ffffff;
-    padding: 32dp;
-    min-width: 550dp;
-    animation: fade-in 0.1s ease-out;
-}
-
-.scoreboard-title {
-    text-align: center;
-    font-size: 28dp;
-    font-weight: bold;
-    color: #ffffff;
-    text-transform: uppercase;
-    letter-spacing: 4dp;
-    margin-bottom: 24dp;
-    padding-bottom: 16dp;
-    border-bottom: 2dp #ffffff;
-}
-
-.scoreboard-header {
-    display: flex;
-    justify-content: space-between;
-    padding: 12dp 16dp;
-    font-size: 14dp;
-    color: #666666;
-    text-transform: uppercase;
-    letter-spacing: 2dp;
-    border-bottom: 1dp #333333;
-}
-
-.scoreboard-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 14dp 16dp;
-    font-size: 18dp;
-    border-bottom: 1dp #222222;
-}
-
-.scoreboard-row:hover {
-    background-color: rgba(255, 255, 255, 0.05);
-}
-
-.scoreboard-row.self {
-    background-color: rgba(255, 255, 255, 0.1);
-    border-left: 4dp #ffffff;
-}
-
-.scoreboard-name {
-    color: #ffffff;
-    flex-grow: 1;
-}
-
-.scoreboard-frags {
-    color: #ffcc00;
-    font-weight: bold;
-    min-width: 80dp;
-    text-align: right;
-}
-
-.scoreboard-ping {
-    color: #666666;
-    min-width: 80dp;
-    text-align: right;
-}
-
-/* ============================================
-   Classic HUD Variant (hud.rml)
-   Retro bitmap-based layout using original
-   Quake status bar graphics from gfx.wad
-   ============================================ */
-
-/* --- Status Bar (bottom bar: armor | face+health | ammo) --- */
-
-.retro-sbar {
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 640dp;
-    height: 48dp;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 8dp;
-    decorator: image(../img/sbar/sbar.png fill);
-}
-
-.retro-stat-section {
-    display: flex;
-    align-items: center;
-    gap: 4dp;
-    flex: 0 0 auto;
-}
-
-.retro-stat-section.retro-center {
-    flex: 0 0 auto;
-}
-
-.retro-icon-slot {
-    width: 48dp;
-    height: 48dp;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.retro-icon-slot img {
-    width: 48dp;
-    height: 48dp;
-}
-
-.retro-value {
-    font-size: 40dp;
-    font-weight: bold;
-    color: #ffffff;
-    font-effect: outline(2dp #000000);
-    min-width: 72dp;
-    text-align: right;
-}
-
-/* --- Face (health-dependent) --- */
-
-.retro-face {
-    width: 48dp;
-    height: 48dp;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.retro-face img {
-    width: 48dp;
-    height: 48dp;
-}
-
-/* --- Inventory Bar (above sbar: weapons | items | ammo counts) --- */
-
-.retro-ibar {
-    position: absolute;
-    bottom: 48dp;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 640dp;
-    height: 40dp;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 8dp;
-    decorator: image(../img/sbar/ibar.png fill);
-}
-
-/* --- Weapons Area (ammo counts stacked above weapon icons) --- */
-
-.retro-weapons-area {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-}
-
-.retro-weapons {
-    display: flex;
-    gap: 0;
-}
-
-.hud-classic .weapon-slot {
-    width: 48dp;
-    height: 24dp;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    opacity: 0.3;
-}
-
-.hud-classic .weapon-slot.owned {
-    opacity: 1;
-}
-
-.hud-classic .weapon-slot.active {
-    opacity: 1;
-}
-
-/* Weapon decorator images (owned state) */
-.hud-classic .weapon-slot.shotgun.owned  { decorator: image(../img/sbar/inv2_shotgun.png contain); }
-.hud-classic .weapon-slot.sshotgun.owned { decorator: image(../img/sbar/inv2_sshotgun.png contain); }
-.hud-classic .weapon-slot.nailgun.owned  { decorator: image(../img/sbar/inv2_nailgun.png contain); }
-.hud-classic .weapon-slot.snailgun.owned { decorator: image(../img/sbar/inv2_snailgun.png contain); }
-.hud-classic .weapon-slot.rlaunch.owned  { decorator: image(../img/sbar/inv2_rlaunch.png contain); }
-.hud-classic .weapon-slot.srlaunch.owned { decorator: image(../img/sbar/inv2_srlaunch.png contain); }
-.hud-classic .weapon-slot.lightng.owned  { decorator: image(../img/sbar/inv2_lightng.png contain); }
-
-/* Weapon decorator images (active state — brighter variant) */
-.hud-classic .weapon-slot.shotgun.active  { decorator: image(../img/sbar/inv_shotgun.png contain); }
-.hud-classic .weapon-slot.sshotgun.active { decorator: image(../img/sbar/inv_sshotgun.png contain); }
-.hud-classic .weapon-slot.nailgun.active  { decorator: image(../img/sbar/inv_nailgun.png contain); }
-.hud-classic .weapon-slot.snailgun.active { decorator: image(../img/sbar/inv_snailgun.png contain); }
-.hud-classic .weapon-slot.rlaunch.active  { decorator: image(../img/sbar/inv_rlaunch.png contain); }
-.hud-classic .weapon-slot.srlaunch.active { decorator: image(../img/sbar/inv_srlaunch.png contain); }
-.hud-classic .weapon-slot.lightng.active  { decorator: image(../img/sbar/inv_lightng.png contain); }
-
-/* --- Ammo Counts (small text row above weapon icons) --- */
-
-.retro-ammo-counts {
-    display: flex;
-    gap: 0;
-}
-
-.retro-ammo-count {
-    font-size: 12dp;
-    font-weight: bold;
-    color: #ffcc00;
-    font-effect: outline(1dp #000000);
-    width: 96dp;
-    text-align: center;
-}
-
-/* --- Items (keys + powerups as bitmap icons, right side) --- */
-
-.retro-items {
-    display: flex;
-    gap: 4dp;
-    align-items: center;
-}
-
-.retro-item {
-    width: 32dp;
-    height: 32dp;
-}
-
-/* ============================================
-   Centerprint - TACTICAL BANNER
-   ============================================ */
-
-@keyframes banner-enter {
-    0% { opacity: 0; }
-    20% { opacity: 0.8; }
-    35% { opacity: 0.1; }
-    55% { opacity: 0.9; }
-    70% { opacity: 0.5; }
-    100% { opacity: 1; }
-}
-
-@keyframes banner-flicker-out {
-    0% { opacity: 1; }
-    20% { opacity: 0.1; }
-    40% { opacity: 0.6; }
-    60% { opacity: 0; }
-    80% { opacity: 0.2; }
-    100% { opacity: 0; }
-}
-
-.centerprint-area {
-    max-width: 640dp;
-    min-width: 320dp;
-    text-align: center;
-    animation: 0.35s quadratic-out banner-enter;
-    position: relative;
-    top: 20%;
-}
-
-.centerprint-area.fading {
-    animation: 0.35s linear banner-flicker-out;
-}
-
-.centerprint-frame {
-    padding: 24dp 48dp;
-    background-color: rgba(0, 0, 0, 0.75);
-}
-
-/* Bracket sizing for centerprint — tighter than corner-stats */
-.centerprint-area .bracket-frame {
-    top: -8dp;
-    bottom: -8dp;
-}
-
-.centerprint-area .bracket-frame.left {
-    left: -18dp;
-}
-
-.centerprint-area .bracket-frame.right {
-    right: -18dp;
-}
-
-.centerprint-text {
-    font-family: Space Grotesk;
-    font-size: 28dp;
-    font-weight: bold;
-    line-height: 1.8;
-    color: #ffffff;
-    text-align: center;
-    letter-spacing: 2dp;
-    text-transform: uppercase;
-    font-effect: outline(2dp #000000);
-}
-
-/* ============================================
-   Notify Messages - TOP-LEFT CONSOLE LINES
-   ============================================ */
-
-@keyframes notify-enter {
-    0% {
-        opacity: 0;
-        transform: translateX(-16dp);
-    }
-    100% {
-        opacity: 1;
-        transform: translateX(0dp);
-    }
-}
-
-.notify-area {
-    position: absolute;
-    top: 168dp;
-    left: 48dp;
-    width: 500dp;
-}
-
-.notify-line {
-    font-family: Space Grotesk;
-    font-size: 18dp;
-    color: #cccccc;
-    padding: 6dp 12dp;
-    margin-bottom: 3dp;
-    border-left: 2dp #555555;
-    background-color: rgba(0, 0, 0, 0.5);
-    font-effect: outline(1dp #000000);
-    letter-spacing: 0.5dp;
-    text-transform: uppercase;
-    animation: 0.2s quadratic-out notify-enter;
-    transition: opacity 0.4s quadratic-in;
-}
-
-.notify-line.fading {
-    opacity: 0;
-}
-
-/* ============================================
    Weapon Switch Flicker
    ============================================ */
 
@@ -874,56 +184,354 @@
     100% { opacity: 1; }
 }
 
-/* Classic HUD: stagger across weapon bar and ammo */
-.weapon-switched .weapon-slot.active {
-    animation: 0.2s linear weapon-flicker;
-}
-
-.weapon-switched .stat-ammo .stat-value {
-    animation: 0.18s 0.03s linear weapon-flicker;
-}
-
 /* ============================================
-   Chat Input Overlay
+   Default HUD — Clean Modern Design
    ============================================ */
 
-@keyframes chat-slide-in {
-    0% {
-        opacity: 0;
-        transform: translateY(8dp);
-    }
-    100% {
-        opacity: 1;
-        transform: translateY(0dp);
-    }
-}
+/* --- Stat Backdrop (readability panel) --- */
 
-.chat-input {
-    position: absolute;
-    bottom: 160dp;
-    left: 48dp;
+.stat-backdrop {
     display: flex;
-    gap: 10dp;
+    align-items: baseline;
+    gap: 16dp;
     padding: 10dp 20dp;
-    background-color: rgba(0, 0, 0, 0.8);
-    border-left: 3dp #888888;
-    border-top: 1dp #333333;
-    border-bottom: 1dp #333333;
-    animation: 0.15s quadratic-out chat-slide-in;
+    background-color: rgba(0, 0, 0, 64);
 }
 
-.chat-prefix {
+/* --- Corner Stat Values --- */
+
+.corner-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.corner-stat .value {
     font-family: Space Grotesk;
-    font-size: 16dp;
     font-weight: bold;
-    color: #ccaa44;
+    color: #ffffff;
+    font-effect: outline(2dp #000000);
+}
+
+.corner-stat .label {
+    font-family: Space Grotesk;
+    font-size: 12dp;
+    color: #666666;
+    text-transform: uppercase;
+    letter-spacing: 1dp;
+}
+
+/* Health: 56dp white */
+.corner-stat.health .value {
+    font-size: 56dp;
+}
+
+/* Armor: 44dp gray */
+.corner-stat.armor .value {
+    font-size: 44dp;
+    color: #aaaaaa;
+}
+
+/* Ammo: 52dp white */
+.corner-stat.ammo .value {
+    font-size: 52dp;
+}
+
+/* --- Stat Divider --- */
+
+.stat-divider {
+    width: 1dp;
+    height: 40dp;
+    background-color: #444444;
+    margin: 0 4dp;
+    align-self: center;
+}
+
+/* --- Armor Type Color Accents --- */
+
+.corner-stat.armor.armor-green .value {
+    color: #55cc55;
+}
+
+.corner-stat.armor.armor-yellow .value {
+    color: #cccc44;
+}
+
+.corner-stat.armor.armor-red .value {
+    color: #cc4444;
+}
+
+/* --- Low-Health Pulse --- */
+
+@keyframes health-pulse {
+    0% { color: #ff6644; }
+    50% { color: #ff2200; }
+    100% { color: #ff6644; }
+}
+
+.corner-stat.health.low .value {
+    animation: 0.6s linear health-pulse infinite;
+}
+
+/* --- Low-Ammo Pulse --- */
+
+@keyframes ammo-pulse {
+    0% { color: #ffaa44; }
+    50% { color: #ff5500; }
+    100% { color: #ffaa44; }
+}
+
+.corner-stat.ammo.low .value {
+    animation: 0.6s linear ammo-pulse infinite;
+}
+
+/* --- Weapon Label --- */
+
+.weapon-label {
+    font-family: Space Grotesk;
+    font-size: 14dp;
+    color: #666666;
+    text-transform: uppercase;
+    letter-spacing: 2dp;
+    margin-bottom: 2dp;
+    font-effect: outline(1dp #000000);
+}
+
+/* --- Ammo Reserves Strip --- */
+
+.ammo-reserves {
+    display: flex;
+    gap: 16dp;
+    margin-top: 8dp;
+    opacity: 0;
+    transition: opacity 0.4s quadratic-out;
+}
+
+.ammo-detail-visible .ammo-reserves {
+    opacity: 1;
+}
+
+.reserve {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    opacity: 0.4;
+}
+
+.reserve.active {
+    opacity: 1;
+}
+
+.reserve .reserve-label {
+    font-family: Space Grotesk;
+    font-size: 10dp;
+    color: #555555;
+    text-transform: uppercase;
+    letter-spacing: 1dp;
+}
+
+.reserve.active .reserve-label {
+    color: #999999;
+}
+
+.reserve .reserve-value {
+    font-family: Space Grotesk;
+    font-size: 18dp;
+    font-weight: bold;
+    color: #666666;
+    font-effect: outline(1dp #000000);
+}
+
+.reserve.active .reserve-value {
+    color: #ffffff;
+}
+
+/* --- Key Indicators (top-right) --- */
+
+.key-indicators {
+    display: flex;
+    gap: 12dp;
+}
+
+.key-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 6dp 10dp;
+    opacity: 0.2;
+}
+
+.key-indicator.owned {
+    opacity: 1;
+}
+
+.key-indicator .key-icon {
+    font-family: Space Grotesk;
+    font-size: 18dp;
+    font-weight: bold;
+    color: #444444;
+    text-transform: uppercase;
+    font-effect: outline(1dp #000000);
+}
+
+.key-indicator.owned .key-icon {
+    color: #ffffff;
+}
+
+.key-indicator .key-accent {
+    width: 24dp;
+    height: 2dp;
+    margin-top: 4dp;
+    background-color: #333333;
+}
+
+.key-indicator.owned.silver .key-accent {
+    background-color: #aaaaaa;
+}
+
+.key-indicator.owned.gold .key-accent {
+    background-color: #ffcc00;
+}
+
+/* --- Powerup Badges (top-left) --- */
+
+.powerup-badges {
+    display: flex;
+    flex-direction: column;
+    gap: 6dp;
+}
+
+.powerup-badge {
+    display: flex;
+    align-items: center;
+    gap: 8dp;
+    padding: 6dp 14dp;
+    background-color: rgba(0, 0, 0, 128);
+    animation: 0.3s quadratic-out slide-up-fade;
+}
+
+.powerup-badge .powerup-name {
+    font-family: Space Grotesk;
+    font-size: 14dp;
+    font-weight: bold;
+    text-transform: uppercase;
     letter-spacing: 1dp;
     font-effect: outline(1dp #000000);
 }
 
-.chat-text {
+.powerup-badge.quad {
+    border-left: 3dp #3388ff;
+}
+
+.powerup-badge.quad .powerup-name {
+    color: #3388ff;
+}
+
+.powerup-badge.pent {
+    border-left: 3dp #ff4444;
+}
+
+.powerup-badge.pent .powerup-name {
+    color: #ff4444;
+}
+
+.powerup-badge.ring {
+    border-left: 3dp #ffcc00;
+}
+
+.powerup-badge.ring .powerup-name {
+    color: #ffcc00;
+}
+
+.powerup-badge.suit {
+    border-left: 3dp #44cc44;
+}
+
+.powerup-badge.suit .powerup-name {
+    color: #44cc44;
+}
+
+/* --- Weapon Bar (bottom-center, HL-style) --- */
+
+.weapon-bar {
+    display: flex;
+    gap: 2dp;
+    padding: 4dp;
+    background-color: rgba(0, 0, 0, 64);
+}
+
+.weapon-slot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 48dp;
+    height: 40dp;
+    background-color: rgba(255, 255, 255, 5);
+    opacity: 0.15;
+    transition: background-color 0.15s quadratic-out;
+}
+
+.weapon-slot.owned {
+    opacity: 0.55;
+    background-color: rgba(255, 255, 255, 18);
+}
+
+.weapon-slot.active {
+    opacity: 1;
+    background-color: rgba(255, 255, 255, 40);
+    border-bottom: 2dp #ffffff;
+}
+
+.weapon-num {
     font-family: Space Grotesk;
-    font-size: 16dp;
-    color: #dddddd;
-    font-effect: outline(1dp #000000);
+    font-size: 14dp;
+    font-weight: bold;
+    color: #555555;
+}
+
+.weapon-slot.owned .weapon-num {
+    color: #aaaaaa;
+}
+
+.weapon-slot.active .weapon-num {
+    color: #ffffff;
+}
+
+.weapon-name {
+    font-family: Space Grotesk;
+    font-size: 9dp;
+    color: #333333;
+    text-transform: uppercase;
+    letter-spacing: 1dp;
+}
+
+.weapon-slot.owned .weapon-name {
+    color: #666666;
+}
+
+.weapon-slot.active .weapon-name {
+    color: #cccccc;
+}
+
+/* --- Weapon-Switched Selectors (default HUD) --- */
+
+.weapon-switched .weapon-label {
+    animation: 0.2s linear weapon-flicker;
+}
+
+.weapon-switched .corner-stat.ammo .value {
+    animation: 0.18s 0.03s linear weapon-flicker;
+}
+
+.weapon-switched .weapon-slot.active {
+    animation: 0.25s linear weapon-flicker;
+}
+
+/* --- Top-Left Stack (powerups + level stats flow vertically) --- */
+
+.top-left-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 12dp;
 }

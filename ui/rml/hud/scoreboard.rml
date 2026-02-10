@@ -3,6 +3,7 @@
     <title>Scoreboard</title>
     <link type="text/rcss" href="../../rcss/base.rcss"/>
     <link type="text/rcss" href="../../rcss/hud.rcss"/>
+    <link type="text/rcss" href="../../rcss/scoreboard.rcss"/>
 </head>
 <body data-model="game" class="hud-overlay">
 

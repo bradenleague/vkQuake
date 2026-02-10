@@ -85,6 +85,7 @@ struct UIManagerState
 	bool				  startup_menu_enter = false;
 	double				  last_resize_time = -1.0;
 	int					  weapon_flicker_frames = 0;
+	int					  ammo_detail_frames = 0;
 
 	// Document & asset tracking
 	std::unordered_map<std::string, Rml::ElementDocument *> documents;
@@ -482,8 +483,10 @@ extern "C"
 				if (it != g_state.documents.end () && it->second)
 				{
 					it->second->SetClass ("weapon-switched", false);
+					it->second->SetClass ("ammo-detail-visible", true);
 				}
 				g_state.weapon_flicker_frames = 2;
+				g_state.ammo_detail_frames = 180; // ~3s at 60fps
 			}
 			prev_weapon = cur_weapon;
 		}
@@ -496,6 +499,20 @@ extern "C"
 				if (it != g_state.documents.end () && it->second)
 				{
 					it->second->SetClass ("weapon-switched", true);
+				}
+			}
+		}
+
+		// Ammo detail countdown — hide reserves strip after weapon-switch timeout.
+		if (g_state.ammo_detail_frames > 0)
+		{
+			g_state.ammo_detail_frames--;
+			if (g_state.ammo_detail_frames == 0)
+			{
+				auto it = g_state.documents.find (g_state.current_hud);
+				if (it != g_state.documents.end () && it->second)
+				{
+					it->second->SetClass ("ammo-detail-visible", false);
 				}
 			}
 		}

@@ -15,7 +15,7 @@ namespace Paths
 {
 
 /* ── HUD document ─────────────────────────────────────────────────── */
-inline constexpr const char *kHud = "ui/rml/hud.rml";
+inline constexpr const char *kHud = "ui/rml/hud/hud.rml";
 
 /* ── HUD overlays ─────────────────────────────────────────────────── */
 inline constexpr const char *kScoreboard = "ui/rml/hud/scoreboard.rml";

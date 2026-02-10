@@ -1,0 +1,46 @@
+/*
+ * vkQuake RmlUI - Chat Input Stylesheet
+ *
+ * Overlay for in-game chat input.
+ */
+
+@keyframes chat-slide-in {
+    0% {
+        opacity: 0;
+        transform: translateY(8dp);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0dp);
+    }
+}
+
+.chat-input {
+    position: absolute;
+    bottom: 160dp;
+    left: 48dp;
+    display: flex;
+    gap: 10dp;
+    padding: 10dp 20dp;
+    background-color: rgba(0, 0, 0, 204);
+    border-left: 3dp #888888;
+    border-top: 1dp #333333;
+    border-bottom: 1dp #333333;
+    animation: 0.15s quadratic-out chat-slide-in;
+}
+
+.chat-prefix {
+    font-family: Space Grotesk;
+    font-size: 16dp;
+    font-weight: bold;
+    color: #ccaa44;
+    letter-spacing: 1dp;
+    font-effect: outline(1dp #000000);
+}
+
+.chat-text {
+    font-family: Space Grotesk;
+    font-size: 16dp;
+    color: #dddddd;
+    font-effect: outline(1dp #000000);
+}

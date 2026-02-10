@@ -1,0 +1,53 @@
+/*
+ * vkQuake RmlUI - Centerprint Stylesheet
+ *
+ * Tactical banner for centerprint messages.
+ */
+
+@keyframes banner-enter {
+    0% { opacity: 0; }
+    20% { opacity: 0.8; }
+    35% { opacity: 0.1; }
+    55% { opacity: 0.9; }
+    70% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+@keyframes banner-flicker-out {
+    0% { opacity: 1; }
+    20% { opacity: 0.1; }
+    40% { opacity: 0.6; }
+    60% { opacity: 0; }
+    80% { opacity: 0.2; }
+    100% { opacity: 0; }
+}
+
+.centerprint-area {
+    max-width: 640dp;
+    min-width: 320dp;
+    text-align: center;
+    animation: 0.35s quadratic-out banner-enter;
+    position: relative;
+    top: 20%;
+}
+
+.centerprint-area.fading {
+    animation: 0.35s linear banner-flicker-out;
+}
+
+.centerprint-frame {
+    padding: 24dp 48dp;
+    background-color: rgba(0, 0, 0, 192);
+}
+
+.centerprint-text {
+    font-family: Space Grotesk;
+    font-size: 28dp;
+    font-weight: bold;
+    line-height: 1.8;
+    color: #ffffff;
+    text-align: center;
+    letter-spacing: 2dp;
+    text-transform: uppercase;
+    font-effect: outline(2dp #000000);
+}

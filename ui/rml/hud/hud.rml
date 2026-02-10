@@ -1,0 +1,162 @@
+<rml>
+<head>
+    <title>HUD</title>
+    <link type="text/rcss" href="../../rcss/base.rcss"/>
+    <link type="text/rcss" href="../../rcss/hud.rcss"/>
+    <link type="text/rcss" href="../../rcss/centerprint.rcss"/>
+    <link type="text/rcss" href="../../rcss/notify.rcss"/>
+    <link type="text/rcss" href="../../rcss/chat.rcss"/>
+</head>
+<body data-model="game" class="hud-overlay hud-default">
+
+    <!-- ========== Bottom-Left: Health + Armor ========== -->
+    <div class="stat-backdrop hud-bottom-left">
+        <!-- Health -->
+        <div class="corner-stat health" data-class-low="health &lt; 25">
+            <span class="value">{{ health }}</span>
+        </div>
+
+        <!-- Divider + Armor (hidden when no armor) -->
+        <div class="stat-divider" data-if="armor > 0"></div>
+        <div class="corner-stat armor"
+             data-if="armor > 0"
+             data-class-armor-green="armor_type == 1"
+             data-class-armor-yellow="armor_type == 2"
+             data-class-armor-red="armor_type == 3">
+            <span class="value">{{ armor }}</span>
+        </div>
+    </div>
+
+    <!-- ========== Bottom-Center: Weapon Bar ========== -->
+    <div class="weapon-bar hud-bottom-center">
+        <div class="weapon-slot" data-class-owned="true" data-class-active="active_weapon == 4096">
+            <span class="weapon-num">1</span>
+            <span class="weapon-name">AXE</span>
+        </div>
+        <div class="weapon-slot" data-class-owned="has_shotgun" data-class-active="active_weapon == 1">
+            <span class="weapon-num">2</span>
+            <span class="weapon-name">SG</span>
+        </div>
+        <div class="weapon-slot" data-class-owned="has_super_shotgun" data-class-active="active_weapon == 2">
+            <span class="weapon-num">3</span>
+            <span class="weapon-name">SSG</span>
+        </div>
+        <div class="weapon-slot" data-class-owned="has_nailgun" data-class-active="active_weapon == 4">
+            <span class="weapon-num">4</span>
+            <span class="weapon-name">NG</span>
+        </div>
+        <div class="weapon-slot" data-class-owned="has_super_nailgun" data-class-active="active_weapon == 8">
+            <span class="weapon-num">5</span>
+            <span class="weapon-name">SNG</span>
+        </div>
+        <div class="weapon-slot" data-class-owned="has_grenade_launcher" data-class-active="active_weapon == 16">
+            <span class="weapon-num">6</span>
+            <span class="weapon-name">GL</span>
+        </div>
+        <div class="weapon-slot" data-class-owned="has_rocket_launcher" data-class-active="active_weapon == 32">
+            <span class="weapon-num">7</span>
+            <span class="weapon-name">RL</span>
+        </div>
+        <div class="weapon-slot" data-class-owned="has_lightning_gun" data-class-active="active_weapon == 64">
+            <span class="weapon-num">8</span>
+            <span class="weapon-name">LG</span>
+        </div>
+    </div>
+
+    <!-- ========== Bottom-Right: Ammo ========== -->
+    <div class="stat-backdrop hud-bottom-right" data-if="!is_axe">
+        <div style="display: flex; flex-direction: column; align-items: flex-end;">
+            <!-- Weapon label -->
+            <span class="weapon-label">{{ weapon_label }}</span>
+
+            <!-- Main ammo count (always visible) -->
+            <div class="corner-stat ammo" data-class-low="ammo &lt; 10">
+                <span class="value">{{ ammo }}</span>
+            </div>
+
+            <!-- Ammo reserves strip (context-sensitive: fades in on weapon switch) -->
+            <div class="ammo-reserves">
+                <div class="reserve" data-class-active="is_shells_weapon">
+                    <span class="reserve-label">S</span>
+                    <span class="reserve-value">{{ shells }}</span>
+                </div>
+                <div class="reserve" data-class-active="is_nails_weapon">
+                    <span class="reserve-label">N</span>
+                    <span class="reserve-value">{{ nails }}</span>
+                </div>
+                <div class="reserve" data-class-active="is_rockets_weapon">
+                    <span class="reserve-label">R</span>
+                    <span class="reserve-value">{{ rockets }}</span>
+                </div>
+                <div class="reserve" data-class-active="is_cells_weapon">
+                    <span class="reserve-label">C</span>
+                    <span class="reserve-value">{{ cells }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== Top-Right: Key Indicators ========== -->
+    <div class="key-indicators hud-top-right">
+        <div class="key-indicator silver" data-class-owned="has_key1">
+            <span class="key-icon">KEY</span>
+            <div class="key-accent"></div>
+        </div>
+        <div class="key-indicator gold" data-class-owned="has_key2">
+            <span class="key-icon">KEY</span>
+            <div class="key-accent"></div>
+        </div>
+    </div>
+
+    <!-- ========== Top-Left: Powerups + Level Stats ========== -->
+    <div class="top-left-stack hud-top-left">
+        <div class="powerup-badges">
+            <div class="powerup-badge quad" data-if="has_quad">
+                <span class="powerup-name">Quad Damage</span>
+            </div>
+            <div class="powerup-badge pent" data-if="has_invulnerability">
+                <span class="powerup-name">Pentagram</span>
+            </div>
+            <div class="powerup-badge ring" data-if="has_invisibility">
+                <span class="powerup-name">Ring of Shadows</span>
+            </div>
+            <div class="powerup-badge suit" data-if="has_suit">
+                <span class="powerup-name">Biosuit</span>
+            </div>
+        </div>
+
+        <div class="level-stats" data-if="!deathmatch">
+            <div class="level-stat">
+                <span class="level-stat-label">KILLS</span>
+                <span class="level-stat-value">{{ monsters }}/{{ total_monsters }}</span>
+            </div>
+            <div class="level-stat">
+                <span class="level-stat-label">SECRETS</span>
+                <span class="level-stat-value">{{ secrets }}/{{ total_secrets }}</span>
+            </div>
+        </div>
+
+        <!-- Notify Messages (flow below stats) -->
+        <div class="notify-area">
+            <div class="notify-line" data-if="notify_0_visible" data-class-fading="notify_0_fading">{{ notify_0 }}</div>
+            <div class="notify-line" data-if="notify_1_visible" data-class-fading="notify_1_fading">{{ notify_1 }}</div>
+            <div class="notify-line" data-if="notify_2_visible" data-class-fading="notify_2_fading">{{ notify_2 }}</div>
+            <div class="notify-line" data-if="notify_3_visible" data-class-fading="notify_3_fading">{{ notify_3 }}</div>
+        </div>
+    </div>
+
+    <!-- ========== Centerprint (center screen) ========== -->
+    <div class="centerprint-area hud-center" data-if="centerprint_visible" data-class-fading="centerprint_fading">
+        <div class="centerprint-frame">
+            <div class="centerprint-text">{{ centerprint }}</div>
+        </div>
+    </div>
+
+    <!-- ========== Chat Input ========== -->
+    <div class="chat-input" data-if="chat_active">
+        <span class="chat-prefix">{{ chat_prefix }}</span>
+        <span class="chat-text">{{ chat_text }}</span>
+    </div>
+
+</body>
+</rml>

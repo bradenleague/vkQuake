@@ -2,7 +2,7 @@
 <head>
     <title>Level Complete</title>
     <link type="text/rcss" href="../../rcss/base.rcss"/>
-    <link type="text/rcss" href="../../rcss/hud.rcss"/>
+    <link type="text/rcss" href="../../rcss/intermission.rcss"/>
 </head>
 <body data-model="game">
 

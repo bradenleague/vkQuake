@@ -1,0 +1,39 @@
+/*
+ * vkQuake RmlUI - Notify Messages Stylesheet
+ *
+ * Top-left console-style notification lines.
+ */
+
+@keyframes notify-enter {
+    0% {
+        opacity: 0;
+        transform: translateX(-16dp);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0dp);
+    }
+}
+
+.notify-area {
+    width: 500dp;
+}
+
+.notify-line {
+    font-family: Space Grotesk;
+    font-size: 18dp;
+    color: #cccccc;
+    padding: 6dp 12dp;
+    margin-bottom: 3dp;
+    border-left: 2dp #555555;
+    background-color: rgba(0, 0, 0, 128);
+    font-effect: outline(1dp #000000);
+    letter-spacing: 0.5dp;
+    text-transform: uppercase;
+    animation: 0.2s quadratic-out notify-enter;
+    transition: opacity 0.4s quadratic-in;
+}
+
+.notify-line.fading {
+    opacity: 0;
+}

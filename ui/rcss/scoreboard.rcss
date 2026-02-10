@@ -1,0 +1,75 @@
+/*
+ * vkQuake RmlUI - Scoreboard Stylesheet
+ *
+ * Clean table layout for scoreboard overlay.
+ */
+
+.scoreboard-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 242);
+    border: 3dp #ffffff;
+    padding: 32dp;
+    min-width: 550dp;
+    animation: fade-in 0.1s ease-out;
+}
+
+.scoreboard-title {
+    text-align: center;
+    font-size: 28dp;
+    font-weight: bold;
+    color: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 4dp;
+    margin-bottom: 24dp;
+    padding-bottom: 16dp;
+    border-bottom: 2dp #ffffff;
+}
+
+.scoreboard-header {
+    display: flex;
+    justify-content: space-between;
+    padding: 12dp 16dp;
+    font-size: 14dp;
+    color: #666666;
+    text-transform: uppercase;
+    letter-spacing: 2dp;
+    border-bottom: 1dp #333333;
+}
+
+.scoreboard-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 14dp 16dp;
+    font-size: 18dp;
+    border-bottom: 1dp #222222;
+}
+
+.scoreboard-row:hover {
+    background-color: rgba(255, 255, 255, 13);
+}
+
+.scoreboard-row.self {
+    background-color: rgba(255, 255, 255, 26);
+    border-left: 4dp #ffffff;
+}
+
+.scoreboard-name {
+    color: #ffffff;
+    flex-grow: 1;
+}
+
+.scoreboard-frags {
+    color: #ffcc00;
+    font-weight: bold;
+    min-width: 80dp;
+    text-align: right;
+}
+
+.scoreboard-ping {
+    color: #666666;
+    min-width: 80dp;
+    text-align: right;
+}

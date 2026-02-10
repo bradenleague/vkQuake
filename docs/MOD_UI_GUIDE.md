@@ -70,11 +70,17 @@ mymod/
     │   │   ├── main_menu.rml         # Replaces base main menu
     │   │   ├── pause_menu.rml        # Replaces base pause menu
     │   │   └── credits.rml           # New menu (navigate to it from another menu)
-    │   └── hud.rml                   # Replaces base HUD
+    │   └── hud/
+    │       └── hud.rml               # Replaces base HUD
     ├── rcss/
     │   ├── base.rcss                 # Replaces base styles (colors, fonts, etc.)
     │   ├── menu.rcss                 # Replaces menu layout styles
-    │   └── hud.rcss                  # Replaces HUD styles
+    │   ├── hud.rcss                  # HUD core + default HUD styles
+    │   ├── centerprint.rcss          # Centerprint banner styles
+    │   ├── notify.rcss               # Notify message styles
+    │   ├── chat.rcss                 # Chat input styles
+    │   ├── scoreboard.rcss           # Scoreboard overlay styles
+    │   └── intermission.rcss         # Intermission/finale styles
     └── fonts/
         └── MyCustomFont.ttf          # Replaces a base font (same filename)
 ```
@@ -95,7 +101,8 @@ The `{{ game_title }}` data binding automatically displays your mod's directory 
 | Asset Type | Base Path | Override by placing in... |
 |------------|-----------|---------------------------|
 | Menu documents | `ui/rml/menus/*.rml` | `mymod/ui/rml/menus/*.rml` |
-| HUD document | `ui/rml/hud.rml` | `mymod/ui/rml/hud.rml` |
+| HUD document | `ui/rml/hud/hud.rml` | `mymod/ui/rml/hud/hud.rml` |
+| HUD overlays | `ui/rml/hud/scoreboard.rml`, `intermission.rml` | `mymod/ui/rml/hud/*.rml` |
 | Stylesheets | `ui/rcss/*.rcss` | `mymod/ui/rcss/*.rcss` |
 | Fonts | `ui/fonts/*.ttf` | `mymod/ui/fonts/*.ttf` |
 
@@ -106,12 +113,25 @@ The `{{ game_title }}` data binding automatically displays your mod's directory 
 | `base.rcss` | Reset, typography, color variables, animations |
 | `menu.rcss` | Menu panels, navigation, layout |
 | `main_menu.rcss` | Main menu specific styles |
-| `hud.rcss` | HUD positioning and element styles |
+| `hud.rcss` | HUD core (overlay, positioning, crosshair, level stats) + default HUD styles (weapon bar, health/armor/ammo corners, keys, powerups) |
+| `centerprint.rcss` | Centerprint banner animations and styles |
+| `notify.rcss` | Notify message line styles |
+| `chat.rcss` | Chat input overlay styles |
+| `scoreboard.rcss` | Scoreboard table overlay |
+| `intermission.rcss` | Intermission stats and finale text |
 | `widgets.rcss` | Form elements (sliders, checkboxes, dropdowns) |
 
 ### HUD
 
-The engine uses a single HUD document at `ui/rml/hud.rml` (Classic retro layout with status bar, weapon icons, and face). Override it by placing your own `hud.rml` at the same path in your mod directory.
+The default HUD is a clean, modern corner-based layout at `ui/rml/hud/hud.rml`:
+
+- **Bottom-left**: Health + armor (with armor-type color coding)
+- **Bottom-center**: Weapon bar (8 slots — not owned/owned/active states)
+- **Bottom-right**: Weapon label + ammo count + context-sensitive ammo reserves
+- **Top-left**: Powerup badges, level stats (kills/secrets), notify messages
+- **Top-right**: Key indicators (silver/gold)
+
+The HUD links multiple RCSS files (`hud.rcss`, `centerprint.rcss`, `notify.rcss`, `chat.rcss`). Override any of them individually or replace the entire `hud.rml` for a fully custom HUD.
 
 ## Writing Custom Menus
 
