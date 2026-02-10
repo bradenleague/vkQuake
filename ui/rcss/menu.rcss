@@ -18,6 +18,7 @@
     justify-content: center;
     align-items: center;
     animation: fade-in 0.15s ease-out;
+    nav: auto;
 }
 
 .menu-container {
@@ -106,10 +107,13 @@
     text-transform: uppercase;
     letter-spacing: 1dp;
     cursor: pointer;
+    tab-index: auto;
+    nav: vertical;
     transition: background-color 0.1s, border-color 0.1s, color 0.1s;
 }
 
-.menu-item:hover {
+.menu-item:hover,
+.menu-item:focus-visible {
     background-color: #1a1a1a;
     border-left: 3dp #8b0000;
     color: #ffffff;
@@ -139,7 +143,8 @@
     font-size: 15dp;
 }
 
-.menu-item.primary:hover {
+.menu-item.primary:hover,
+.menu-item.primary:focus-visible {
     background-color: #1a1a1a;
     color: #b30000;
 }
@@ -154,7 +159,8 @@
     color: #ff3333;
 }
 
-.menu-item.danger:hover {
+.menu-item.danger:hover,
+.menu-item.danger:focus-visible {
     background-color: #ff3333;
     border-left: 3dp #ff3333;
     color: #ffffff;
@@ -167,7 +173,8 @@
     padding: 10dp 20dp;
 }
 
-.menu-item.secondary:hover {
+.menu-item.secondary:hover,
+.menu-item.secondary:focus-visible {
     color: #ffffff;
     background-color: #1a1a1a;
 }
@@ -222,9 +229,16 @@
 
 .option-row.clickable {
     cursor: pointer;
+    tab-index: auto;
+    nav: vertical;
 }
 
-.option-row.clickable:hover .option-value {
+.option-row.clickable:focus-visible {
+    background-color: #1a1a1a;
+}
+
+.option-row.clickable:hover .option-value,
+.option-row.clickable:focus-visible .option-value {
     color: #b30000;
 }
 
@@ -277,9 +291,11 @@
     min-width: 100dp;
     border: 2dp #333333;
     text-align: center;
+    nav: horizontal;
 }
 
-.dialog-buttons .menu-item:hover {
+.dialog-buttons .menu-item:hover,
+.dialog-buttons .menu-item:focus-visible {
     border: 2dp #ffffff;
     background-color: #1a1a1a;
 }
@@ -289,7 +305,8 @@
     color: #ff3333;
 }
 
-.dialog-buttons .menu-item.danger:hover {
+.dialog-buttons .menu-item.danger:hover,
+.dialog-buttons .menu-item.danger:focus-visible {
     background-color: #ff3333;
     border: 2dp #ff3333;
     color: #ffffff;
@@ -307,10 +324,13 @@
     border-bottom: 1dp #1a1a1a;
     cursor: pointer;
     width: 100%;
+    tab-index: auto;
+    nav: vertical;
     transition: background-color 0.1s;
 }
 
-.keybind-row:hover {
+.keybind-row:hover,
+.keybind-row:focus-visible {
     background-color: #1a1a1a;
 }
 
@@ -335,7 +355,8 @@
     text-transform: uppercase;
 }
 
-.keybind-row:hover .keybind-key {
+.keybind-row:hover .keybind-key,
+.keybind-row:focus-visible .keybind-key {
     border-color: #8b0000;
 }
 
@@ -357,10 +378,13 @@
     padding: 12dp 16dp;
     border-bottom: 1dp #1a1a1a;
     cursor: pointer;
+    tab-index: auto;
+    nav: vertical;
     transition: background-color 0.1s;
 }
 
-.save-slot:hover {
+.save-slot:hover,
+.save-slot:focus-visible {
     background-color: #1a1a1a;
     border-left: 3dp #8b0000;
     padding-left: 13dp;
@@ -404,10 +428,13 @@
     font-size: 14dp;
     cursor: pointer;
     border-bottom: 1dp #1a1a1a;
+    tab-index: auto;
+    nav: vertical;
     transition: background-color 0.1s, color 0.1s;
 }
 
-.mode-option:hover {
+.mode-option:hover,
+.mode-option:focus-visible {
     background-color: #1a1a1a;
     color: #ffffff;
 }
@@ -435,9 +462,12 @@
     color: #ffffff;
     text-transform: uppercase;
     cursor: pointer;
+    tab-index: auto;
+    nav: vertical;
 }
 
-.back-button:hover {
+.back-button:hover,
+.back-button:focus-visible {
     background-color: #1a1a1a;
     border-color: #ffffff;
 }
