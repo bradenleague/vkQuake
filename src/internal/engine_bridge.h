@@ -102,11 +102,13 @@ extern "C"
 	int COM_FOpenFile (const char *filename, FILE **file, unsigned int *path_id);
 
 /* file_from_pak is set by COM_FOpenFile; must be read immediately
- * after the call before any other file operation. */
-#ifdef __cplusplus
-	extern thread_local int file_from_pak;
+ * after the call before any other file operation.
+ * Use __thread / __declspec(thread) to avoid C++ thread_local wrapper
+ * mismatch with the C _Thread_local definition on macOS. */
+#ifdef _MSC_VER
+extern __declspec(thread) int file_from_pak;
 #else
-extern _Thread_local int file_from_pak;
+extern __thread int file_from_pak;
 #endif
 
 	size_t FS_fread (void *ptr, size_t size, size_t nmemb, fshandle_t *fh);
