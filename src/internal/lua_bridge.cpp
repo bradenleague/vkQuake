@@ -10,12 +10,15 @@
 
 #include "lua_bridge.h"
 #include "game_data_model.h"
+#include "menu_event_handler.h"
 #include "engine_bridge.h"
 
 #include "quake_stats.h"
 
 #include <RmlUi/Lua/IncludeLua.h>
 #include <RmlUi/Lua/Interpreter.h>
+
+#include <string>
 
 namespace QRmlUI
 {
@@ -102,6 +105,50 @@ static void SetString (lua_State *L, const char *key, const char *val)
 	lua_setfield (L, -2, key);
 }
 
+// ── Menu action dispatch ────────────────────────────────────────────
+// The Lua plugin replaces the default event listener instancer, so all
+// onclick="..." attributes are compiled as Lua.  The existing menu
+// documents use action strings like navigate('options'), new_game(),
+// close(), etc.  We register each as a Lua global that reconstructs
+// the action string and routes it through MenuEventHandler.
+
+static int l_action_dispatch (lua_State *L)
+{
+	const char *func_name = lua_tostring (L, lua_upvalueindex (1));
+	int			nargs = lua_gettop (L);
+
+	std::string action (func_name);
+	if (nargs == 0)
+	{
+		action += "()";
+	}
+	else if (nargs == 1)
+	{
+		action += "('";
+		action += luaL_checkstring (L, 1);
+		action += "')";
+	}
+	else
+	{
+		// Two args: e.g. cycle_cvar('name', 1)
+		action += "('";
+		action += luaL_checkstring (L, 1);
+		action += "', ";
+		action += std::to_string ((int)luaL_checknumber (L, 2));
+		action += ")";
+	}
+
+	MenuEventHandler::ProcessAction (action);
+	return 0;
+}
+
+// All action function names that menus use in onclick attributes.
+// Each is registered as a Lua global that forwards to MenuEventHandler.
+static const char *s_action_names[] = {
+	"navigate", "command",	 "close",	   "close_all", "quit",		"new_game",	  "load_game",	  "save_game",
+	"bind_key", "main_menu", "connect_to", "host_game", "load_mod", "cycle_cvar", "cvar_changed", nullptr,
+};
+
 // ── Public API ──────────────────────────────────────────────────────
 
 void Initialize ()
@@ -134,7 +181,16 @@ void Initialize ()
 	lua_newtable (s_lua);
 	lua_setglobal (s_lua, "game");
 
-	Con_DPrintf ("LuaBridge: Initialized game/engine Lua tables\n");
+	// Register menu action functions as Lua globals so existing
+	// onclick="navigate('options')" etc. work with the Lua instancer.
+	for (int i = 0; s_action_names[i] != nullptr; i++)
+	{
+		lua_pushstring (s_lua, s_action_names[i]);
+		lua_pushcclosure (s_lua, l_action_dispatch, 1);
+		lua_setglobal (s_lua, s_action_names[i]);
+	}
+
+	Con_DPrintf ("LuaBridge: Initialized game/engine/action Lua globals\n");
 }
 
 void Update ()
