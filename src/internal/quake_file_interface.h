@@ -1,15 +1,13 @@
 /*
  * vkQuake RmlUI - Quake-Aware File Interface
  *
- * Custom Rml::FileInterface that searches mod directories before the base
- * directory, enabling per-mod UI overrides. For example, a mod at
- * "mymod/ui/rcss/menu.rcss" automatically takes precedence over
- * "ui/rcss/menu.rcss".
+ * Custom Rml::FileInterface that uses Quake's virtual filesystem
+ * (COM_FOpenFile + FS_* wrappers) for file I/O. This ensures
+ * correct search path resolution and pak file support.
  *
  * Search order:
- *   1. {com_gamedir}/{path}   — mod override (if com_gamedir is set and differs from basedir)
- *   2. {com_basedir}/{path}   — base installation
- *   3. {path}                 — relative to CWD (fallback)
+ *   1. Quake VFS via COM_FOpenFile (game dirs, pak files)
+ *   2. Basedir-relative fallback (loose files at project root)
  */
 
 #ifndef QRMLUI_QUAKE_FILE_INTERFACE_H
@@ -26,6 +24,7 @@ public:
     size_t Read(void* buffer, size_t size, Rml::FileHandle file) override;
     bool Seek(Rml::FileHandle file, long offset, int origin) override;
     size_t Tell(Rml::FileHandle file) override;
+    size_t Length(Rml::FileHandle file) override;
 };
 
 } // namespace QRmlUI

@@ -81,8 +81,38 @@ const char* COM_GetGameNames(int/*qboolean*/ full);
  * com_gamedir: active mod directory full path (e.g. ".../mymod")
  * Both are char[MAX_OSPATH] in the engine (MAX_OSPATH = PATH_MAX). */
 #include <limits.h>
+#include <stdio.h>
 extern char com_basedir[PATH_MAX];
 extern char com_gamedir[PATH_MAX];
+
+/* ── Quake VFS (pak-aware file I/O) ──────────────────────────────── */
+
+/* Mirrored from common.h — uses int instead of qboolean to avoid
+ * pulling in engine headers. Layout must match exactly. */
+typedef struct _fshandle_t
+{
+	FILE	*file;
+	int		 pak;	 /* is the file read from a pak */
+	long	 start;	 /* file or data start position */
+	long	 length; /* file or data size */
+	long	 pos;	 /* current position relative to start */
+} fshandle_t;
+
+int COM_FOpenFile (const char *filename, FILE **file, unsigned int *path_id);
+
+/* file_from_pak is set by COM_FOpenFile; must be read immediately
+ * after the call before any other file operation. */
+#ifdef __cplusplus
+extern thread_local int file_from_pak;
+#else
+extern _Thread_local int file_from_pak;
+#endif
+
+size_t FS_fread (void *ptr, size_t size, size_t nmemb, fshandle_t *fh);
+int    FS_fseek (fshandle_t *fh, long offset, int whence);
+long   FS_ftell (fshandle_t *fh);
+int    FS_fclose (fshandle_t *fh);
+long   FS_filelength (fshandle_t *fh);
 
 /* ── Engine-side UI sync callbacks ────────────────────────────────── */
 /* These are engine functions (guarded by USE_RMLUI in their source

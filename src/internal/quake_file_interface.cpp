@@ -1,87 +1,103 @@
 /*
  * vkQuake RmlUI - Quake-Aware File Interface Implementation
+ *
+ * Uses Quake's virtual filesystem (COM_FOpenFile + FS_* wrappers)
+ * for pak file support and correct search path resolution. Falls
+ * back to basedir-relative lookup for loose files at the project
+ * root (e.g. <basedir>/ui/...) which are outside game directories.
  */
 
 #include "quake_file_interface.h"
 #include "engine_bridge.h"
 
 #include <cstdio>
-#include <cstring>
+#include <string>
 
 namespace QRmlUI {
+namespace {
 
-Rml::FileHandle QuakeFileInterface::Open(const Rml::String& path)
+struct QFileHandle
 {
-    // Try mod directory first (if active and different from basedir)
-    if (com_gamedir[0] != '\0') {
-        std::string mod_path = std::string(com_gamedir) + "/" + path.c_str();
-        FILE* f = fopen(mod_path.c_str(), "rb");
-        if (f) {
-            Con_DPrintf("QuakeFileInterface: Opened (mod) %s\n", mod_path.c_str());
-            return reinterpret_cast<Rml::FileHandle>(f);
-        }
-    }
+	fshandle_t fh;
+};
 
-    // Try basedir + game name (catches mod files when com_gamedir points to userdir)
-    if (com_basedir[0] != '\0') {
-        const char* games = COM_GetGameNames(0);
-        if (games && games[0] != '\0') {
-            std::string game_list(games);
-            size_t pos = 0;
-            while (pos < game_list.size()) {
-                size_t sep = game_list.find(';', pos);
-                std::string game = game_list.substr(pos, sep - pos);
-                if (!game.empty()) {
-                    std::string mod_path = std::string(com_basedir) + "/" + game + "/" + path.c_str();
-                    FILE* f = fopen(mod_path.c_str(), "rb");
-                    if (f) {
-                        Con_DPrintf("QuakeFileInterface: Opened (basedir mod) %s\n", mod_path.c_str());
-                        return reinterpret_cast<Rml::FileHandle>(f);
-                    }
-                }
-                if (sep == std::string::npos)
-                    break;
-                pos = sep + 1;
-            }
-        }
-    }
+/* Helper: open a loose file and populate an fshandle_t for it. */
+static Rml::FileHandle OpenLoose (FILE *f)
+{
+	fseek (f, 0, SEEK_END);
+	long length = ftell (f);
+	fseek (f, 0, SEEK_SET);
 
-    // Try base directory
-    if (com_basedir[0] != '\0') {
-        std::string base_path = std::string(com_basedir) + "/" + path.c_str();
-        FILE* f = fopen(base_path.c_str(), "rb");
-        if (f) {
-            return reinterpret_cast<Rml::FileHandle>(f);
-        }
-    }
-
-    // Fallback: try path as-is (relative to CWD)
-    FILE* f = fopen(path.c_str(), "rb");
-    if (f) {
-        return reinterpret_cast<Rml::FileHandle>(f);
-    }
-
-    return 0;
+	auto *qfh = new QFileHandle;
+	qfh->fh.file = f;
+	qfh->fh.pak = 0;
+	qfh->fh.start = 0;
+	qfh->fh.pos = 0;
+	qfh->fh.length = length;
+	return reinterpret_cast<Rml::FileHandle> (qfh);
 }
 
-void QuakeFileInterface::Close(Rml::FileHandle file)
+} // anonymous namespace
+
+Rml::FileHandle QuakeFileInterface::Open (const Rml::String &path)
 {
-    fclose(reinterpret_cast<FILE*>(file));
+	/* 1. Quake VFS: game dirs + pak files (handles mod overrides,
+	 *    pak-embedded assets, and the full engine search order). */
+	FILE *file = nullptr;
+	int   length = COM_FOpenFile (path.c_str (), &file, nullptr);
+	if (length != -1 && file)
+	{
+		auto *qfh = new QFileHandle;
+		qfh->fh.file = file;
+		qfh->fh.pak = file_from_pak; // capture immediately after COM_FOpenFile
+		qfh->fh.start = ftell (file);
+		qfh->fh.pos = 0;
+		qfh->fh.length = length;
+		return reinterpret_cast<Rml::FileHandle> (qfh);
+	}
+
+	/* 2. Basedir-relative: base UI files live at <basedir>/ui/...,
+	 *    which is outside the game search paths (id1/, mod/, etc.). */
+	if (com_basedir[0] != '\0')
+	{
+		std::string base_path = std::string (com_basedir) + "/" + path.c_str ();
+		FILE       *f = fopen (base_path.c_str (), "rb");
+		if (f)
+			return OpenLoose (f);
+	}
+
+	return 0;
 }
 
-size_t QuakeFileInterface::Read(void* buffer, size_t size, Rml::FileHandle file)
+void QuakeFileInterface::Close (Rml::FileHandle file)
 {
-    return fread(buffer, 1, size, reinterpret_cast<FILE*>(file));
+	auto *qfh = reinterpret_cast<QFileHandle *> (file);
+	FS_fclose (&qfh->fh);
+	delete qfh;
 }
 
-bool QuakeFileInterface::Seek(Rml::FileHandle file, long offset, int origin)
+size_t QuakeFileInterface::Read (void *buffer, size_t size, Rml::FileHandle file)
 {
-    return fseek(reinterpret_cast<FILE*>(file), offset, origin) == 0;
+	auto *qfh = reinterpret_cast<QFileHandle *> (file);
+	return FS_fread (buffer, 1, size, &qfh->fh);
 }
 
-size_t QuakeFileInterface::Tell(Rml::FileHandle file)
+bool QuakeFileInterface::Seek (Rml::FileHandle file, long offset, int origin)
 {
-    return static_cast<size_t>(ftell(reinterpret_cast<FILE*>(file)));
+	auto *qfh = reinterpret_cast<QFileHandle *> (file);
+	return FS_fseek (&qfh->fh, offset, origin) == 0;
+}
+
+size_t QuakeFileInterface::Tell (Rml::FileHandle file)
+{
+	auto *qfh = reinterpret_cast<QFileHandle *> (file);
+	return static_cast<size_t> (FS_ftell (&qfh->fh));
+}
+
+size_t QuakeFileInterface::Length (Rml::FileHandle file)
+{
+	auto *qfh = reinterpret_cast<QFileHandle *> (file);
+	return static_cast<size_t> (FS_filelength (&qfh->fh));
 }
 
 } // namespace QRmlUI
