@@ -11,6 +11,8 @@ layout (push_constant) uniform PushConsts
 	float ui_offset_x;
 	float ui_offset_y;
 	float ui_opacity;
+	float echo_strength;
+	float echo_scale;
 }
 push_constants;
 
@@ -68,6 +70,18 @@ void main ()
 	else
 	{
 		ui = texture (ui_texture, ui_uv);
+	}
+
+	// Helmet display echo: faint ghost at a different focal depth
+	float echo_str = push_constants.echo_strength;
+	if (echo_str > 0.0)
+	{
+		vec2 echo_uv = (ui_uv - 0.5) * push_constants.echo_scale + 0.5;
+		if (warp != 0.0)
+			echo_uv = barrel_distort (echo_uv, warp);
+		vec4 echo = texture (ui_texture, echo_uv);
+		ui.rgb += echo.rgb * echo_str;
+		ui.a = max (ui.a, echo.a * echo_str);
 	}
 
 	// Composite: UI buffer is premultiplied alpha, scaled by opacity (scr_sbaralpha)

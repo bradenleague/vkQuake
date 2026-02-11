@@ -20,7 +20,7 @@ Draws a single fullscreen triangle (3 vertices, no vertex buffer) covering clip 
 
 ### Fragment Shader (`Shaders/postprocess.frag`)
 
-Four stages in order:
+Five stages in order:
 
 1. **Game sampling** — Sampled at straight UVs, no distortion applied.
 
@@ -31,11 +31,18 @@ Four stages in order:
 
    This splits bright UI elements into visible color fringing at the edges.
 
-3. **Composite** — Premultiplied alpha blend with opacity scale:
+3. **Helmet display echo** — When `echo_strength > 0`, the UI texture is sampled a second time at a slightly different scale from screen center (`echo_scale`), simulating a ghost reflection at a different focal depth inside a helmet visor. The echo is additively blended into the primary UI before compositing:
+   ```
+   echo_uv = (ui_uv - 0.5) * echo_scale + 0.5
+   ui.rgb += echo.rgb * echo_strength
+   ui.a = max(ui.a, echo.a * echo_strength)
+   ```
+
+4. **Composite** — Premultiplied alpha blend with opacity scale:
    `opacity = clamp(ui_opacity, 0.1, 1.0)`,
    `game * (1 - ui.a * opacity) + ui.rgb * opacity`
 
-4. **Color grading** — Contrast multiply, then gamma power curve.
+5. **Color grading** — Contrast multiply, then gamma power curve.
 
 ## Push Constants
 
@@ -50,6 +57,8 @@ All effect parameters are passed per-frame via Vulkan push constants from `GL_En
 | 16 | `ui_offset_x` | `v_hud_offset_x` | Horizontal HUD sway (UV-space) |
 | 20 | `ui_offset_y` | `v_hud_offset_y` | Vertical HUD bounce (UV-space) |
 | 24 | `ui_opacity` | `scr_sbaralpha` cvar | UI layer opacity input (shader clamps effective range to 0.1–1.0) |
+| 28 | `echo_strength` | `r_ui_echo` cvar | Helmet display echo intensity (0 = off) |
+| 32 | `echo_scale` | `r_ui_echo_scale` cvar | Echo UV scale from center (1.0 = no offset, >1.0 = larger ghost) |
 
 ## Console Variables
 
@@ -57,6 +66,8 @@ All effect parameters are passed per-frame via Vulkan push constants from `GL_En
 |------|---------|-------|-------------|
 | `r_ui_warp` | `-0.1` | `CVAR_NONE` | Barrel distortion applied to the UI layer. Negative values = pincushion (inward curve). |
 | `r_ui_chromatic` | `0.003` | `CVAR_NONE` | Chromatic aberration intensity. Scaled by `1080/height` so the effect is resolution-independent. Set to `0` to disable. |
+| `r_ui_echo` | `0` | `CVAR_NONE` | Helmet display echo strength. Adds a faint ghost of the UI at a different focal depth, as if projected inside a curved visor. Set to `0` to disable. |
+| `r_ui_echo_scale` | `1` | `CVAR_NONE` | Echo UV scale from screen center. Values > 1.0 make the ghost slightly larger (simulating a deeper focal plane). |
 | `vid_gamma` | (engine default) | `CVAR_ARCHIVE` | Standard gamma correction. |
 | `vid_contrast` | `1.4` | `CVAR_ARCHIVE` | Contrast multiplier, clamped to [1.0, 2.0]. |
 | `scr_sbaralpha` | `0.75` | `CVAR_ARCHIVE` | HUD opacity. Controls both the classic status bar and the RmlUI layer via the post-process pass. |
@@ -77,6 +88,29 @@ The HUD layer shifts slightly in response to player movement, computed per-frame
 
 Both axes use **critically-damped springs** (`accel = -omega^2 * offset - 2 * omega * velocity`) so the HUD returns smoothly to center without oscillation. Tiny residuals below threshold are zeroed to prevent float drift.
 
+## Lua Post-Process Controller
+
+Both the base UI and ui_lab mod include a `postprocess_controller.lua` script that dynamically adjusts echo (and other effects in ui_lab) based on game state.
+
+### Base UI (`ui/lua/postprocess_controller.lua`)
+
+Manages echo intensity per context:
+- **Gameplay (HUD visible):** `r_ui_echo 0.1` — subtle visor ghost
+- **Menus:** `r_ui_echo 0.2` — stronger projection feel
+
+Loaded from both `main_menu.rml` and `hud.rml` via `<script src>`. Uses `engine.on_frame("postprocess", fn)` with named registration so loading from multiple documents doesn't double-register — the second load overwrites the same callback slot.
+
+Uses `engine.hud_visible()` to detect menu vs gameplay state. Only writes cvars on state change (dirty tracking via `last_echo`).
+
+### ui_lab (`ui_lab/ui/lua/postprocess_controller.lua`)
+
+Extends the base pattern with dynamic effects driven by game state:
+- **Damage hit:** decaying warp + chromatic pulse
+- **Weapon fire:** decaying chromatic flash
+- **Quad damage:** continuous chromatic sine pulse
+- **Low health (<25):** progressive warp intensification
+- **Echo toggle:** off in menus, restored during gameplay
+
 ## Source Files
 
 | File | Role |
@@ -84,5 +118,8 @@ Both axes use **critically-damped springs** (`accel = -omega^2 * offset - 2 * om
 | `Shaders/postprocess.vert` | Fullscreen triangle vertex shader |
 | `Shaders/postprocess.frag` | Compositing + effects fragment shader |
 | `Quake/gl_vidsdl.c` | Vulkan resource setup, descriptor sets, push constant dispatch |
+| `Quake/gl_rmisc.c` | Pipeline layout creation (push constant range) |
 | `Quake/view.c` | `V_UpdateHudInertia()` — spring physics for HUD offset |
 | `Quake/view.h` | Exports `v_hud_offset_x`, `v_hud_offset_y` |
+| `ui/lua/postprocess_controller.lua` | Base echo controller (menu/HUD toggle) |
+| `ui_lab/ui/lua/postprocess_controller.lua` | Extended controller (damage, fire, quad, low health effects) |
