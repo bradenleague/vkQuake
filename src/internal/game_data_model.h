@@ -41,6 +41,9 @@ class GameDataModel
 	// Force a dirty check on all variables (call after level load)
 	static void MarkAllDirty ();
 
+	// Reset transient animation state (call on disconnect)
+	static void ResetTransients ();
+
 	// Check if initialized
 	static bool IsInitialized ();
 
@@ -66,6 +69,9 @@ extern "C"
 
 	// Shutdown game data model
 	void GameDataModel_Shutdown (void);
+
+	// Reset transient animation state (call on disconnect)
+	void GameDataModel_ResetTransients (void);
 
 	// Update game data from Quake state (call each frame)
 	void GameDataModel_Update (void);

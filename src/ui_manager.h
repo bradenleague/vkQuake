@@ -83,6 +83,9 @@ extern "C"
 	void UI_ShowIntermission (void);
 	void UI_HideIntermission (void);
 
+	/* Reset transient animation state (pain flash, weapon switch) on disconnect */
+	void GameDataModel_ResetTransients (void);
+
 	/* Game state synchronization - call each frame from sbar.c */
 	void UI_SyncGameState (
 		const int *stats, int stats_count, int items, int intermission, int gametype, int maxclients, const char *level_name, const char *map_name,

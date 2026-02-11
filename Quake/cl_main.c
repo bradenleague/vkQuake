@@ -174,13 +174,14 @@ void CL_Disconnect (void)
 	CDAudio_Stop ();
 
 #ifdef USE_RMLUI
-	// Clean up RmlUI HUD overlays on disconnect
+	// Clean up RmlUI HUD overlays and transient state on disconnect
 	{
 		extern void Sbar_UI_Reset (void);
 		UI_HideHUD ();
 		UI_HideScoreboard ();
 		UI_HideIntermission ();
 		Sbar_UI_Reset ();
+		GameDataModel_ResetTransients ();
 	}
 #endif
 

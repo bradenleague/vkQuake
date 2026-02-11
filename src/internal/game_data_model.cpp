@@ -73,10 +73,12 @@ bool				 GameDataModel::s_first_update = true;
 Rml::String			 GameDataModel::s_prev_gamedir;
 bool				 GameDataModel::s_was_chatting = false;
 
-// Reticle animation transient state
+// Transient animation state — reset on disconnect via ResetTransients()
 static double			s_weapon_show_time = 0.0;
 static double			s_fire_flash_time = 0.0;
 static int				s_prev_weaponframe = 0;
+static int				s_prev_health = 100;
+static int				s_prev_active_weapon = 0;
 static constexpr double WEAPON_SHOW_DURATION = 0.15;
 static constexpr double FIRE_FLASH_DURATION = 0.30;
 
@@ -554,6 +556,15 @@ void GameDataModel::MarkAllDirty ()
 	s_model_handle.DirtyAllVariables ();
 }
 
+void GameDataModel::ResetTransients ()
+{
+	s_weapon_show_time = 0.0;
+	s_fire_flash_time = 0.0;
+	s_prev_weaponframe = 0;
+	s_prev_health = 100;
+	s_prev_active_weapon = 0;
+}
+
 bool GameDataModel::IsInitialized ()
 {
 	return s_initialized;
@@ -575,6 +586,11 @@ extern "C"
 	void GameDataModel_Shutdown (void)
 	{
 		QRmlUI::GameDataModel::Shutdown ();
+	}
+
+	void GameDataModel_ResetTransients (void)
+	{
+		QRmlUI::GameDataModel::ResetTransients ();
 	}
 
 	void GameDataModel_Update (void)
@@ -677,15 +693,13 @@ extern "C"
 		// Threshold of 2 HP filters out megahealth decay (1 HP/sec tick-down)
 		// while catching real damage (minimum 5 HP in Quake).
 		{
-			static int s_prev_health = 100;
-			int		   drop = s_prev_health - g_game_state.health;
+			int drop = s_prev_health - g_game_state.health;
 			g_game_state.face_pain = (drop >= 2 && s_prev_health > 0);
 			s_prev_health = g_game_state.health;
 		}
 
 		// Detect weapon switch (skip initial equip when prev was 0)
 		{
-			static int s_prev_active_weapon = 0;
 			if (g_game_state.active_weapon != s_prev_active_weapon && s_prev_active_weapon != 0)
 			{
 				g_game_state.weapon_show = true;
