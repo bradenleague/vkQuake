@@ -90,15 +90,15 @@ Both axes use **critically-damped springs** (`accel = -omega^2 * offset - 2 * om
 
 ## Lua Post-Process Controller
 
-Both the base UI and ui_lab mod include a `postprocess_controller.lua` script that dynamically adjusts echo (and other effects in ui_lab) based on game state.
+The demo and ui_lab mods each include a `postprocess_controller.lua` script that dynamically adjusts echo (and other effects in ui_lab) based on game state. The base UI has no post-process controller.
 
-### Base UI (`ui/lua/postprocess_controller.lua`)
+### Demo Mod (`demo/ui/lua/postprocess_controller.lua`)
 
 Manages echo intensity per context:
 - **Gameplay (HUD visible):** `r_ui_echo 0.1` — subtle visor ghost
 - **Menus:** `r_ui_echo 0.2` — stronger projection feel
 
-Loaded from both `main_menu.rml` and `hud.rml` via `<script src>`. Uses `engine.on_frame("postprocess", fn)` with named registration so loading from multiple documents doesn't double-register — the second load overwrites the same callback slot.
+Loaded from `hud.rml` via `<script src>`. Uses `engine.on_frame("postprocess", fn)` with named registration so loading from multiple documents doesn't double-register — the second load overwrites the same callback slot.
 
 Uses `engine.hud_visible()` to detect menu vs gameplay state. Only writes cvars on state change (dirty tracking via `last_echo`).
 
@@ -121,5 +121,5 @@ Extends the base pattern with dynamic effects driven by game state:
 | `Quake/gl_rmisc.c` | Pipeline layout creation (push constant range) |
 | `Quake/view.c` | `V_UpdateHudInertia()` — spring physics for HUD offset |
 | `Quake/view.h` | Exports `v_hud_offset_x`, `v_hud_offset_y` |
-| `ui/lua/postprocess_controller.lua` | Base echo controller (menu/HUD toggle) |
+| `demo/ui/lua/postprocess_controller.lua` | Demo mod echo controller (menu/HUD toggle) |
 | `ui_lab/ui/lua/postprocess_controller.lua` | Extended controller (damage, fire, quad, low health effects) |
