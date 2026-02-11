@@ -37,16 +37,7 @@ out/
 *.exe
 *.res
 
-# Engine build artifacts
-Quake/*.dll
-Quake/*.o
-Quake/*.d
-Quake/id1/
-Quake/vkquake
-Quake/vkquake.pak
-Quake/embedded_pak.c
-Quake/*.exe
-Quake/*.res
+# Legacy executables at project root
 vkquake
 quakespasm
 
@@ -71,17 +62,8 @@ CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
 
-# SPIR-V compiled shaders
+# SPIR-V compiled shaders (legacy — meson builds to build/)
 Shaders/*.spv
-Shaders/Compiled/Debug/*.spv
-Shaders/Compiled/Debug/*.c
-Shaders/Compiled/Debug/*.d
-Shaders/Compiled/Release/*.spv
-Shaders/Compiled/Release/*.c
-Shaders/Compiled/Release/*.d
-Shaders/*.exe
-Shaders/*.obj
-Shaders/bintoc
 
 # Generated files
 *.c.spv
