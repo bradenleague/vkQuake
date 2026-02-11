@@ -376,7 +376,7 @@ if use_rmlui
     # Lua scripting for RmlUI (optional, requires use_rmlui)
     use_lua = get_option('use_lua')
     if use_lua
-        lua_dep = dependency('lua', required : true)
+        lua_dep = dependency('lua', 'lua5.4', 'lua5.3', required : true)
         deps += lua_dep
         cflags += '-DUSE_LUA'
         cxxflags += '-DUSE_LUA'

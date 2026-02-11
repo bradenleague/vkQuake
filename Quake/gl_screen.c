@@ -1291,36 +1291,36 @@ static void SCR_DrawGUI (void *unused)
 
 		if (ui_speeds.value >= 2)
 		{
-			static double window_start = 0.0;
-			static int	  frame_count = 0;
-			static double sum_begin = 0.0;
-			static double sum_update = 0.0;
-			static double sum_update_dp = 0.0;
-			static double sum_update_model = 0.0;
-			static double sum_update_lua = 0.0;
-			static double sum_update_hud_logic = 0.0;
-			static double sum_update_notify = 0.0;
-			static double sum_update_context = 0.0;
-			static double sum_update_post = 0.0;
-			static double sum_render = 0.0;
-			static double sum_end = 0.0;
-			static double sum_total = 0.0;
-			static double sum_draw_calls = 0.0;
-			static double sum_triangles = 0.0;
-			static double worst_total = 0.0;
-			static double worst_update = 0.0;
-			static double worst_update_dp = 0.0;
-			static double worst_update_model = 0.0;
-			static double worst_update_lua = 0.0;
-			static double worst_update_hud_logic = 0.0;
-			static double worst_update_notify = 0.0;
-			static double worst_update_context = 0.0;
-			static double worst_update_post = 0.0;
-			static double worst_render = 0.0;
+			static double	   window_start = 0.0;
+			static int		   frame_count = 0;
+			static double	   sum_begin = 0.0;
+			static double	   sum_update = 0.0;
+			static double	   sum_update_dp = 0.0;
+			static double	   sum_update_model = 0.0;
+			static double	   sum_update_lua = 0.0;
+			static double	   sum_update_hud_logic = 0.0;
+			static double	   sum_update_notify = 0.0;
+			static double	   sum_update_context = 0.0;
+			static double	   sum_update_post = 0.0;
+			static double	   sum_render = 0.0;
+			static double	   sum_end = 0.0;
+			static double	   sum_total = 0.0;
+			static double	   sum_draw_calls = 0.0;
+			static double	   sum_triangles = 0.0;
+			static double	   worst_total = 0.0;
+			static double	   worst_update = 0.0;
+			static double	   worst_update_dp = 0.0;
+			static double	   worst_update_model = 0.0;
+			static double	   worst_update_lua = 0.0;
+			static double	   worst_update_hud_logic = 0.0;
+			static double	   worst_update_notify = 0.0;
+			static double	   worst_update_context = 0.0;
+			static double	   worst_update_post = 0.0;
+			static double	   worst_render = 0.0;
 			static const char *worst_update_culprit = "n/a";
-			static double	  worst_update_culprit_ms = 0.0;
-			static int	  max_draw_calls = 0;
-			static int	  max_triangles = 0;
+			static double	   worst_update_culprit_ms = 0.0;
+			static int		   max_draw_calls = 0;
+			static int		   max_triangles = 0;
 
 			if (window_start == 0.0)
 			{
@@ -1398,10 +1398,10 @@ static void SCR_DrawGUI (void *unused)
 			{
 				double inv = frame_count > 0 ? 1.0 / frame_count : 0.0;
 				Con_Printf (
-					"ui(avg1s) %5.2f ms total (begin %4.2f update %4.2f render %4.2f end %4.2f) worst %5.2f ms (update %4.2f render %4.2f, culprit %s %.2f) dc %.1f/%d tri %.1f/%d\n",
-					sum_total * inv, 
-					sum_begin * inv, sum_update * inv, sum_render * inv, sum_end * inv, worst_total, worst_update, worst_render, worst_update_culprit,
-					worst_update_culprit_ms, sum_draw_calls * inv, max_draw_calls, sum_triangles * inv, max_triangles);
+					"ui(avg1s) %5.2f ms total (begin %4.2f update %4.2f render %4.2f end %4.2f) worst %5.2f ms (update %4.2f render %4.2f, culprit %s %.2f) dc "
+					"%.1f/%d tri %.1f/%d\n",
+					sum_total * inv, sum_begin * inv, sum_update * inv, sum_render * inv, sum_end * inv, worst_total, worst_update, worst_render,
+					worst_update_culprit, worst_update_culprit_ms, sum_draw_calls * inv, max_draw_calls, sum_triangles * inv, max_triangles);
 
 				if (ui_speeds.value >= 3)
 				{
