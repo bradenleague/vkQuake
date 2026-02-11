@@ -1177,6 +1177,21 @@ extern "C"
 		g_state.perf_last.total_ms = g_state.perf_last.begin_ms + g_state.perf_last.update_ms + g_state.perf_last.render_ms + g_state.perf_last.end_ms;
 	}
 
+	// GPU timestamp instrumentation — primary CB, around UI render pass
+	void UI_WriteBeginTimestamp (void *cmd)
+	{
+		if (!IsRmlUiEnabled () || !g_state.render_interface)
+			return;
+		g_state.render_interface->WriteBeginTimestamp (static_cast<VkCommandBuffer> (cmd));
+	}
+
+	void UI_WriteEndTimestamp (void *cmd)
+	{
+		if (!IsRmlUiEnabled () || !g_state.render_interface)
+			return;
+		g_state.render_interface->WriteEndTimestamp (static_cast<VkCommandBuffer> (cmd));
+	}
+
 	// Garbage collection - call after GPU fence wait
 	void UI_CollectGarbage (void)
 	{
@@ -1200,6 +1215,10 @@ extern "C"
 			return;
 		}
 		*out_stats = g_state.perf_last;
+		if (g_state.render_interface)
+		{
+			out_stats->gpu_ms = g_state.render_interface->GetLastFrameGpuTimeMs ();
+		}
 	}
 
 	// Input mode control
