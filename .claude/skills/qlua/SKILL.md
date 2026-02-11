@@ -67,6 +67,7 @@ engine.cvar_get_number(name)  -- Read cvar (returns float)
 engine.cvar_set(name, value)  -- Write cvar
 engine.time()                 -- Realtime in seconds (float)
 engine.on_frame(name, fn)     -- Register named per-frame callback
+engine.hud_visible()          -- true when key_dest == key_game (HUD showing)
 ```
 
 For the full `game.*` field list and detailed API docs:

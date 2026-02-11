@@ -224,6 +224,7 @@ This registers:
 2. **`engine.exec(cmd)`** — queues a console command via `Cbuf_AddText`
 3. **`engine.cvar_get(name)`** — reads a cvar value
 4. **`engine.cvar_set(name, value)`** — writes a cvar value
+5. **`engine.hud_visible()`** — returns true when the HUD is active (`key_dest == key_game`)
 
 See [Engine Bridge API](#engine-bridge-api) for the full reference.
 
@@ -535,6 +536,7 @@ raise a Lua error.
  engine.cvar_set(name, value)  -- Write cvar value
  engine.time()                 -- Current realtime (seconds, float)
  engine.on_frame(name, fn)     -- Register a named per-frame callback
+ engine.hud_visible()          -- true when HUD is active (key_dest == key_game)
 ```
 
 ### Example: React to Engine State

@@ -73,6 +73,12 @@ static int l_engine_time (lua_State *L)
 	return 1;
 }
 
+static int l_engine_hud_visible (lua_State *L)
+{
+	lua_pushboolean (L, key_dest == key_game);
+	return 1;
+}
+
 static int l_engine_on_frame (lua_State *L)
 {
 	const char *name = luaL_checkstring (L, 1);
@@ -238,6 +244,9 @@ void Initialize ()
 
 	lua_pushcfunction (s_lua, l_engine_on_frame);
 	lua_setfield (s_lua, -2, "on_frame");
+
+	lua_pushcfunction (s_lua, l_engine_hud_visible);
+	lua_setfield (s_lua, -2, "hud_visible");
 
 	lua_setglobal (s_lua, "engine");
 

@@ -30,3 +30,8 @@ assert_true(t > 0, "engine.time() should be positive")
 
 suite("engine.on_frame")
 assert_type(engine.on_frame, "function", "engine.on_frame should be a function")
+
+suite("engine.hud_visible")
+assert_type(engine.hud_visible, "function", "engine.hud_visible should be a function")
+local hv = engine.hud_visible()
+assert_type(hv, "boolean", "engine.hud_visible() should return boolean")
