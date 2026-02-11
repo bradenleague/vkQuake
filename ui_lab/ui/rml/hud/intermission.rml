@@ -1,0 +1,43 @@
+<rml>
+<head>
+    <title>Level Complete</title>
+    <link type="text/rcss" href="../../rcss/base.rcss"/>
+    <link type="text/rcss" href="../../rcss/lab_intermission.rcss"/>
+</head>
+<body data-model="game">
+
+    <!-- Level end (intermission type 1): stats display -->
+    <div class="visor-intermission" data-if="intermission_type == 1">
+        <div class="intermission-header">
+            <span class="sys-label">MISSION COMPLETE</span>
+        </div>
+
+        <div class="intermission-level">{{ level_name }}</div>
+
+        <div class="intermission-stats">
+            <div class="visor-panel intermission-stat">
+                <span class="sys-label">KILL</span>
+                <span class="stat-value">{{ monsters }} / {{ total_monsters }}</span>
+            </div>
+            <div class="visor-panel intermission-stat">
+                <span class="sys-label">SCRT</span>
+                <span class="stat-value">{{ secrets }} / {{ total_secrets }}</span>
+            </div>
+            <div class="visor-panel intermission-stat">
+                <span class="sys-label">TIME</span>
+                <span class="stat-value stat-time">{{ time_minutes }}:{{ time_seconds }}</span>
+            </div>
+        </div>
+
+        <div class="intermission-continue">
+            <span class="sys-label">PRESS ANY KEY TO CONTINUE</span>
+        </div>
+    </div>
+
+    <!-- Finale / cutscene (intermission type 2 or 3): scrolling text -->
+    <div class="visor-finale" data-if="intermission_type >= 2">
+        <div class="finale-text">{{ finale_text }}</div>
+    </div>
+
+</body>
+</rml>

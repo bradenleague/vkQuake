@@ -1,0 +1,14 @@
+<rml>
+<head>
+    <title>Chat</title>
+    <link type="text/rcss" href="../../rcss/base.rcss"/>
+    <link type="text/rcss" href="../../rcss/lab_chat.rcss"/>
+</head>
+<body data-model="game" class="hud-overlay">
+    <div class="visor-chat" data-if="chat_active">
+        <span class="sys-label">COM::</span>
+        <span class="chat-prefix">{{ chat_prefix }}</span>
+        <span class="chat-text">{{ chat_text }}</span>
+    </div>
+</body>
+</rml>

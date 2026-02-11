@@ -1,0 +1,56 @@
+/*
+ * Terminal Visor — Notify Messages (lab_notify.rcss)
+ *
+ * Standalone notify document styling with visor green-on-dark theme.
+ * Positioned top-left, below visor header safe zone.
+ * Matches visor-panel aesthetic: bordered, dark bg, Space Mono labels.
+ */
+
+@keyframes notify-enter {
+    0% {
+        opacity: 0;
+        transform: translateX(-12dp);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0dp);
+    }
+}
+
+.sys-label {
+    font-family: Space Mono;
+    font-size: 11dp;
+    text-transform: uppercase;
+    letter-spacing: 1dp;
+    color: #5a8a5a;
+}
+
+.visor-notify {
+    position: absolute;
+    top: 120dp;
+    left: 70dp;
+    display: flex;
+    flex-direction: column;
+    gap: 3dp;
+    max-width: 600dp;
+}
+
+.notify-header {
+    font-size: 10dp;
+    margin-bottom: 2dp;
+}
+
+.notify-line {
+    font-family: Space Grotesk;
+    font-size: 15dp;
+    color: #c8e6c8;
+    padding: 4dp 8dp;
+    border-left: 2dp #3a6b3a;
+    background-color: #0a1a0e80;
+    animation: 0.2s quadratic-out notify-enter;
+    transition: opacity 0.4s quadratic-in;
+}
+
+.notify-line.fading {
+    opacity: 0.35;
+}

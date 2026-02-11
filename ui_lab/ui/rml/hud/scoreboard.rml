@@ -1,0 +1,48 @@
+<rml>
+<head>
+    <title>Scoreboard</title>
+    <link type="text/rcss" href="../../rcss/base.rcss"/>
+    <link type="text/rcss" href="../../rcss/lab_scoreboard.rcss"/>
+</head>
+<body data-model="game" class="hud-overlay">
+
+    <div class="visor-scoreboard">
+        <div class="scoreboard-header">
+            <span class="sys-label">MISSION REPORT</span>
+            <span class="visor-header-sep">|</span>
+            <span class="sys-label scoreboard-level">{{ level_name }}</span>
+        </div>
+
+        <!-- Single Player Stats -->
+        <div data-if="!deathmatch" class="scoreboard-stats">
+            <div class="visor-panel scoreboard-row">
+                <span class="sys-label">KILL</span>
+                <span class="stat-value">{{ monsters }} / {{ total_monsters }}</span>
+            </div>
+            <div class="visor-panel scoreboard-row">
+                <span class="sys-label">SCRT</span>
+                <span class="stat-value">{{ secrets }} / {{ total_secrets }}</span>
+            </div>
+            <div class="visor-panel scoreboard-row">
+                <span class="sys-label">TIME</span>
+                <span class="stat-value">{{ time_minutes }}:{{ time_seconds }}</span>
+            </div>
+        </div>
+
+        <!-- Deathmatch Scoreboard -->
+        <div data-if="deathmatch" class="scoreboard-dm">
+            <div class="scoreboard-dm-header">
+                <span class="sys-label" style="flex: 1 1 auto;">CALLSIGN</span>
+                <span class="sys-label" style="width: 60dp; text-align: right;">FRAGS</span>
+            </div>
+            <div class="dm-player-list">
+                <div data-for="player : players" class="dm-player-row" data-class-local="player.is_local">
+                    <span class="dm-name">{{ player.name }}</span>
+                    <span class="dm-frags">{{ player.frags }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</rml>

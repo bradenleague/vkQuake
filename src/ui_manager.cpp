@@ -97,7 +97,6 @@ struct UIManagerState
 	double				  last_resize_time = -1.0;
 	int					  weapon_flicker_frames = 0;
 	int					  ammo_detail_frames = 0;
-	int					  face_pain_frames = 0;
 
 	// Document & asset tracking
 	std::unordered_map<std::string, Rml::ElementDocument *> documents;
@@ -631,32 +630,6 @@ extern "C"
 			}
 		}
 
-		// Face pain visor glitch — toggle "face-pain" class on HUD doc.
-		// Same pattern as weapon-switched: remove class, wait 2 frames,
-		// re-add to retrigger the CSS @keyframes animation.
-		{
-			if (QRmlUI::g_game_state.face_pain && g_state.face_pain_frames == 0)
-			{
-				auto it = g_state.documents.find (g_state.current_hud);
-				if (it != g_state.documents.end () && it->second)
-				{
-					it->second->SetClass ("face-pain", false);
-				}
-				g_state.face_pain_frames = 2;
-			}
-		}
-		if (g_state.face_pain_frames > 0)
-		{
-			g_state.face_pain_frames--;
-			if (g_state.face_pain_frames == 0)
-			{
-				auto it = g_state.documents.find (g_state.current_hud);
-				if (it != g_state.documents.end () && it->second)
-				{
-					it->second->SetClass ("face-pain", true);
-				}
-			}
-		}
 		phase_end = Sys_DoubleTime ();
 		g_state.perf_last.update_hud_logic_ms = (phase_end - phase_start) * 1000.0;
 		phase_start = phase_end;

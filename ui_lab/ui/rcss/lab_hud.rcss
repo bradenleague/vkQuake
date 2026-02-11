@@ -207,38 +207,6 @@ body.visor-hud {
     border-color: #4aaa4a;
 }
 
-/* ── Notify Messages ── */
-
-.visor-notify {
-    display: flex;
-    flex-direction: column;
-    gap: 3dp;
-    max-width: 600dp;
-}
-
-.notify-line {
-    font-family: Space Grotesk;
-    font-size: 15dp;
-    color: #c8e6c8;
-    padding: 2dp 6dp;
-    animation: 0.2s quadratic-out notify-enter;
-}
-
-.notify-line.fading {
-    opacity: 0.35;
-}
-
-@keyframes notify-enter {
-    0% {
-        opacity: 0;
-        transform: translateX(-12dp);
-    }
-    100% {
-        opacity: 1;
-        transform: translateX(0dp);
-    }
-}
-
 /* ============================================
    Top-Right: Key Indicators
    ============================================ */
@@ -535,122 +503,82 @@ reticle-dot, reticle-line, reticle-ring, reticle-arc {
 }
 
 /* Default shape parameters */
-.crosshair reticle-dot { reticle-radius: 2dp; }
+.crosshair reticle-dot { reticle-radius: 3dp; }
 .crosshair reticle-line { reticle-length: 8dp; reticle-width: 2dp; reticle-gap: 4dp; }
-.crosshair reticle-ring { reticle-radius: 10dp; reticle-stroke: 1.5dp; }
-.crosshair reticle-ring.inner { reticle-radius: 5dp; }
+.crosshair reticle-ring { reticle-radius: 14dp; reticle-stroke: 2dp; }
 .crosshair reticle-arc.upper { reticle-start-angle: 220; reticle-end-angle: 320; reticle-radius: 10dp; reticle-stroke: 2dp; }
 .crosshair reticle-arc.lower { reticle-start-angle: 40; reticle-end-angle: 140; reticle-radius: 10dp; reticle-stroke: 2dp; }
+
+/* ── Per-weapon idle sizing ──
+   Lua controller applies weapon-XX class on weapon switch.
+   Sizes reflect weapon behavior: spread, precision, splash radius.
+   Order: base defaults → per-weapon idle → per-weapon firing → equipping */
+
+/* Axe: melee — collapse to near-dot */
+.crosshair.weapon-axe reticle-ring  { reticle-radius: 3dp; reticle-stroke: 1dp; }
+.crosshair.weapon-axe reticle-dot   { reticle-radius: 2dp; }
+.crosshair.weapon-axe reticle-line  { reticle-gap: 1dp; reticle-length: 3dp; }
+
+/* Shotgun: moderate spread */
+.crosshair.weapon-sg reticle-ring   { reticle-radius: 12dp; reticle-stroke: 1.5dp; }
+.crosshair.weapon-sg reticle-dot    { reticle-radius: 2dp; }
+.crosshair.weapon-sg reticle-line   { reticle-gap: 5dp; reticle-length: 8dp; }
+
+/* Super Shotgun: wide spread */
+.crosshair.weapon-ssg reticle-ring  { reticle-radius: 18dp; reticle-stroke: 2dp; }
+.crosshair.weapon-ssg reticle-dot   { reticle-radius: 2dp; }
+.crosshair.weapon-ssg reticle-line  { reticle-gap: 7dp; reticle-length: 10dp; }
+
+/* Nailgun: projectile, moderate */
+.crosshair.weapon-ng reticle-ring   { reticle-radius: 8dp; reticle-stroke: 1.5dp; }
+.crosshair.weapon-ng reticle-dot    { reticle-radius: 2dp; }
+.crosshair.weapon-ng reticle-line   { reticle-gap: 3dp; reticle-length: 7dp; }
+
+/* Super Nailgun: tighter than NG */
+.crosshair.weapon-sng reticle-ring  { reticle-radius: 7dp; reticle-stroke: 1.5dp; }
+.crosshair.weapon-sng reticle-dot   { reticle-radius: 2dp; }
+.crosshair.weapon-sng reticle-line  { reticle-gap: 3dp; reticle-length: 6dp; }
+
+/* Grenade Launcher: arcing splash */
+.crosshair.weapon-gl reticle-ring   { reticle-radius: 14dp; reticle-stroke: 2.5dp; }
+.crosshair.weapon-gl reticle-dot    { reticle-radius: 2dp; }
+.crosshair.weapon-gl reticle-line   { reticle-gap: 6dp; reticle-length: 8dp; }
+
+/* Rocket Launcher: direct + splash */
+.crosshair.weapon-rl reticle-ring   { reticle-radius: 12dp; reticle-stroke: 2dp; }
+.crosshair.weapon-rl reticle-dot    { reticle-radius: 2dp; }
+.crosshair.weapon-rl reticle-line   { reticle-gap: 5dp; reticle-length: 8dp; }
+
+/* Lightning Gun: precision beam */
+.crosshair.weapon-lg reticle-ring   { reticle-radius: 5dp; reticle-stroke: 1dp; }
+.crosshair.weapon-lg reticle-dot    { reticle-radius: 1.5dp; }
+.crosshair.weapon-lg reticle-line   { reticle-gap: 2dp; reticle-length: 5dp; }
 
 /* Transitions on all reticle properties */
 reticle-dot, reticle-line, reticle-ring, reticle-arc {
     transition: reticle-radius reticle-gap reticle-length reticle-stroke 0.25s quadratic-out;
 }
 
-/* Per-weapon fire animations (Lua controller toggles the active class) */
-.crosshair.firing-sg  reticle-line { reticle-gap: 7dp; }
-.crosshair.firing-sg  reticle-ring { reticle-radius: 14dp; }
-.crosshair.firing-ssg reticle-line { reticle-gap: 9dp; }
-.crosshair.firing-ssg reticle-ring { reticle-radius: 16dp; }
+/* Per-weapon fire animations (Lua controller toggles the active class)
+   Expansion values are relative to per-weapon idle sizes above. */
+.crosshair.firing-sg  reticle-line { reticle-gap: 8dp; }
+.crosshair.firing-sg  reticle-ring { reticle-radius: 16dp; }
+.crosshair.firing-ssg reticle-line { reticle-gap: 11dp; }
+.crosshair.firing-ssg reticle-ring { reticle-radius: 22dp; }
 .crosshair.firing-ng  reticle-line { reticle-gap: 5dp; }
-.crosshair.firing-ng  reticle-ring { reticle-radius: 12dp; }
-.crosshair.firing-sng reticle-line { reticle-gap: 4dp; }
-.crosshair.firing-sng reticle-ring { reticle-radius: 11dp; }
-.crosshair.firing-gl  reticle-line { reticle-gap: 8dp; }
-.crosshair.firing-gl  reticle-ring { reticle-radius: 15dp; }
+.crosshair.firing-ng  reticle-ring { reticle-radius: 11dp; }
+.crosshair.firing-sng reticle-line { reticle-gap: 5dp; }
+.crosshair.firing-sng reticle-ring { reticle-radius: 10dp; }
+.crosshair.firing-gl  reticle-line { reticle-gap: 9dp; }
+.crosshair.firing-gl  reticle-ring { reticle-radius: 18dp; }
 .crosshair.firing-rl  reticle-line { reticle-gap: 8dp; }
-.crosshair.firing-rl  reticle-ring { reticle-radius: 15dp; }
-.crosshair.firing-lg  reticle-line { reticle-gap: 2dp; }
-.crosshair.firing-lg  reticle-ring { reticle-radius: 8dp; }
+.crosshair.firing-rl  reticle-ring { reticle-radius: 16dp; }
+.crosshair.firing-lg  reticle-line { reticle-gap: 3dp; }
+.crosshair.firing-lg  reticle-ring { reticle-radius: 7dp; }
 
 /* Equip animation: collapse then restore */
-.crosshair.equipping reticle-line { reticle-gap: 1dp; reticle-length: 4dp; }
-.crosshair.equipping reticle-ring { reticle-radius: 4dp; }
-
-/* ============================================
-   Centerprint
-   ============================================ */
-
-.visor-centerprint-area {
-    position: absolute;
-    left: 50%;
-    top: 45%;
-    transform: translate(-50%, -50%);
-    max-width: 700dp;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6dp;
-    padding: 10dp 18dp;
-    border: 1dp #3a6b3a;
-    background-color: #0a1a0ee0;
-    animation: 0.3s quadratic-out centerprint-enter;
-    transition: border-color background-color 0.5s quadratic-out;
-}
-
-.visor-centerprint-area.fading {
-    opacity: 0.35;
-}
-
-.centerprint-tag {
-    font-size: 9dp;
-    color: #3a6b3a;
-    letter-spacing: 2dp;
-}
-
-.visor-centerprint-text {
-    font-family: Space Grotesk;
-    font-size: 22dp;
-    color: #c8e6c8;
-}
-
-@keyframes centerprint-enter {
-    0% {
-        opacity: 0;
-        transform: translate(-50%, -50%) scaleX(0.9);
-    }
-    30% {
-        opacity: 0.4;
-    }
-    100% {
-        opacity: 1;
-        transform: translate(-50%, -50%) scaleX(1);
-    }
-}
-
-/* ============================================
-   Chat Input
-   ============================================ */
-
-.visor-chat {
-    position: absolute;
-    left: 50%;
-    bottom: 80dp;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 8dp;
-    padding: 8dp 14dp;
-    border: 1dp #3a6b3a;
-    background-color: #0a1a0ee8;
-    transition: border-color 0.5s quadratic-out;
-}
-
-.visor-chat .sys-label {
-    color: #4aaa4a;
-}
-
-.chat-prefix {
-    font-family: Space Mono;
-    font-size: 16dp;
-    color: #5a8a5a;
-}
-
-.chat-text {
-    font-family: Space Mono;
-    font-size: 16dp;
-    color: #c8e6c8;
-}
+.crosshair.equipping reticle-line { reticle-gap: 1dp; reticle-length: 3dp; }
+.crosshair.equipping reticle-ring { reticle-radius: 3dp; }
 
 /* ============================================
    PHASE 4: Health Tier Palettes
@@ -686,10 +614,6 @@ reticle-dot, reticle-line, reticle-ring, reticle-arc {
 .tier-3 .visor-panel {
     border-color: #5a6b3a;
     background-color: #0e1a0ad8;
-}
-
-.tier-3 .notify-line {
-    color: #dae6c8;
 }
 
 /* ── Tier 2 (60-79 HP): Warning amber ── */
@@ -728,14 +652,6 @@ reticle-dot, reticle-line, reticle-ring, reticle-arc {
     border-color: #aaaa3a;
 }
 
-.tier-2 .notify-line {
-    color: #e6d89a;
-}
-
-.tier-2 .visor-centerprint-text {
-    color: #e6d89a;
-}
-
 /* ── Tier 1 (40-59 HP): Orange-red ── */
 
 .tier-1 .visor-bracket {
@@ -770,14 +686,6 @@ reticle-dot, reticle-line, reticle-ring, reticle-arc {
 .tier-1 .sigil-slot.owned {
     color: #aa6a3a;
     border-color: #aa6a3a;
-}
-
-.tier-1 .notify-line {
-    color: #e6a878;
-}
-
-.tier-1 .visor-centerprint-text {
-    color: #e6a878;
 }
 
 /* ── Tier 0 (<40 HP): Critical red ── */
@@ -815,14 +723,6 @@ reticle-dot, reticle-line, reticle-ring, reticle-arc {
 .tier-0 .sigil-slot.owned {
     color: #aa3a3a;
     border-color: #aa3a3a;
-}
-
-.tier-0 .notify-line {
-    color: #e67878;
-}
-
-.tier-0 .visor-centerprint-text {
-    color: #e67878;
 }
 
 @keyframes critical-border-blink {
@@ -963,7 +863,7 @@ reticle-dot, reticle-line, reticle-ring, reticle-arc {
    PHASE 6: Animations
    ============================================ */
 
-/* ── 6a: Visor Glitch (face-pain from C++) ── */
+/* ── 6a: Visor Glitch (face-pain retriggered by ui_lab Lua) ── */
 
 @keyframes visor-glitch {
     0% {

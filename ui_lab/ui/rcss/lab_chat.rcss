@@ -1,0 +1,43 @@
+/*
+ * Terminal Visor — Chat Input (lab_chat.rcss)
+ *
+ * Standalone chat document styling with visor terminal theme.
+ * Bottom-center "COM::" prompt.
+ */
+
+.sys-label {
+    font-family: Space Mono;
+    font-size: 11dp;
+    text-transform: uppercase;
+    letter-spacing: 1dp;
+    color: #5a8a5a;
+}
+
+.visor-chat {
+    position: absolute;
+    left: 50%;
+    bottom: 140dp;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8dp;
+    padding: 8dp 14dp;
+    border: 1dp #3a6b3a;
+    background-color: #0a1a0ee8;
+    transition: border-color 0.5s quadratic-out;
+}
+
+.visor-chat .sys-label {
+    color: #4aaa4a;
+}
+
+.chat-prefix {
+    font-family: Space Mono;
+    font-size: 16dp;
+    color: #5a8a5a;
+}
+
+.chat-text {
+    font-family: Space Mono;
+    font-size: 16dp;
+    color: #c8e6c8;
+}

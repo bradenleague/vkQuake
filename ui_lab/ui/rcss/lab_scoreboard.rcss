@@ -1,0 +1,120 @@
+/*
+ * Terminal Visor — Scoreboard (lab_scoreboard.rcss)
+ *
+ * Visor-themed scoreboard overlay for SP stats and DM player list.
+ * Dark green terminal aesthetic with Space Mono labels.
+ */
+
+.sys-label {
+    font-family: Space Mono;
+    font-size: 11dp;
+    text-transform: uppercase;
+    letter-spacing: 1dp;
+    color: #5a8a5a;
+}
+
+.stat-value {
+    font-family: Space Mono;
+    font-size: 18dp;
+    color: #c8e6c8;
+}
+
+.visor-panel {
+    padding: 8dp 12dp;
+    border: 1dp #3a6b3a;
+    background-color: #0a1a0ed8;
+}
+
+.visor-scoreboard {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #0a1a0ef0;
+    border: 2dp #3a6b3a;
+    padding: 24dp;
+    min-width: 500dp;
+    animation: fade-in 0.15s quadratic-out;
+}
+
+.scoreboard-header {
+    display: flex;
+    align-items: center;
+    gap: 10dp;
+    padding-bottom: 12dp;
+    margin-bottom: 16dp;
+    border-bottom: 1dp #3a6b3a;
+}
+
+.visor-header-sep {
+    font-family: Space Mono;
+    font-size: 10dp;
+    color: #3a6b3a;
+}
+
+.scoreboard-level {
+    color: #c8e6c8;
+    font-size: 12dp;
+}
+
+/* ── Single Player Stats ── */
+
+.scoreboard-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 8dp;
+}
+
+.scoreboard-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 32dp;
+    padding: 10dp 14dp;
+}
+
+/* ── Deathmatch ── */
+
+.scoreboard-dm {
+    display: flex;
+    flex-direction: column;
+    gap: 4dp;
+}
+
+.scoreboard-dm-header {
+    display: flex;
+    justify-content: space-between;
+    padding: 6dp 14dp;
+    border-bottom: 1dp #3a6b3a;
+    margin-bottom: 4dp;
+}
+
+.dm-player-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2dp;
+}
+
+.dm-player-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 16dp;
+    padding: 6dp 14dp;
+}
+
+.dm-player-row.local {
+    border: 1dp #4aaa4a;
+    background-color: #0a1a0e40;
+}
+
+.dm-name {
+    font-family: Space Mono;
+    font-size: 14dp;
+    color: #c8e6c8;
+}
+
+.dm-frags {
+    font-family: Space Mono;
+    font-size: 14dp;
+    color: #4aaa4a;
+}

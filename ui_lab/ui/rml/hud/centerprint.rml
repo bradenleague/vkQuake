@@ -1,0 +1,13 @@
+<rml>
+<head>
+    <title>Centerprint</title>
+    <link type="text/rcss" href="../../rcss/base.rcss"/>
+    <link type="text/rcss" href="../../rcss/lab_centerprint.rcss"/>
+</head>
+<body data-model="game" class="hud-overlay">
+    <div class="visor-centerprint-area" data-if="centerprint_visible" data-class-fading="centerprint_fading">
+        <span class="sys-label centerprint-tag">INCOMING TRANSMISSION</span>
+        <div class="visor-centerprint-text">{{ centerprint }}</div>
+    </div>
+</body>
+</rml>

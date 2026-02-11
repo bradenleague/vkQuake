@@ -1,0 +1,118 @@
+/*
+ * Terminal Visor — Intermission & Finale (lab_intermission.rcss)
+ *
+ * Visor-themed level complete stats and episode end text.
+ * Dark green terminal aesthetic.
+ */
+
+.sys-label {
+    font-family: Space Mono;
+    font-size: 11dp;
+    text-transform: uppercase;
+    letter-spacing: 1dp;
+    color: #5a8a5a;
+}
+
+.stat-value {
+    font-family: Space Mono;
+    font-size: 28dp;
+    color: #c8e6c8;
+}
+
+.visor-panel {
+    padding: 8dp 12dp;
+    border: 1dp #3a6b3a;
+    background-color: #0a1a0ed8;
+}
+
+/* ============================================
+   Level End (Type 1) — Stats Display
+   ============================================ */
+
+.visor-intermission {
+    width: 100%;
+    height: 100%;
+    background-color: #0a0e0af0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    animation: fade-in 0.3s quadratic-out;
+}
+
+.intermission-header {
+    margin-bottom: 16dp;
+    padding: 6dp 20dp;
+    border: 1dp #3a6b3a;
+    background-color: #0a1a0ed8;
+}
+
+.intermission-header .sys-label {
+    font-size: 12dp;
+    letter-spacing: 3dp;
+    color: #4aaa4a;
+}
+
+.intermission-level {
+    font-family: Space Grotesk;
+    font-size: 48dp;
+    color: #c8e6c8;
+    text-transform: uppercase;
+    letter-spacing: 6dp;
+    margin-bottom: 40dp;
+}
+
+.intermission-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 10dp;
+    min-width: 450dp;
+}
+
+.intermission-stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 48dp;
+    padding: 12dp 18dp;
+}
+
+.stat-time {
+    color: #e6d89a;
+}
+
+.intermission-continue {
+    margin-top: 48dp;
+    animation: blink 1.2s step-start infinite;
+}
+
+.intermission-continue .sys-label {
+    font-size: 12dp;
+    letter-spacing: 3dp;
+    color: #5a8a5a;
+}
+
+/* ============================================
+   Finale (Type 2+) — Scrolling Text
+   ============================================ */
+
+.visor-finale {
+    width: 100%;
+    height: 100%;
+    background-color: #0a0e0af0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 64dp;
+    animation: fade-in 0.3s quadratic-out;
+}
+
+.finale-text {
+    font-family: Space Grotesk;
+    font-size: 20dp;
+    color: #c8e6c8;
+    text-align: center;
+    max-width: 600dp;
+    line-height: 1.6em;
+}

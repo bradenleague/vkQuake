@@ -1,0 +1,62 @@
+/*
+ * Terminal Visor — Centerprint (lab_centerprint.rcss)
+ *
+ * Standalone centerprint document styling with visor terminal theme.
+ * Centered "INCOMING TRANSMISSION" banner.
+ */
+
+@keyframes centerprint-enter {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scaleX(0.9);
+    }
+    30% {
+        opacity: 0.4;
+    }
+    100% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scaleX(1);
+    }
+}
+
+.sys-label {
+    font-family: Space Mono;
+    font-size: 11dp;
+    text-transform: uppercase;
+    letter-spacing: 1dp;
+    color: #5a8a5a;
+}
+
+.visor-centerprint-area {
+    position: absolute;
+    left: 50%;
+    top: 45%;
+    transform: translate(-50%, -50%);
+    max-width: 700dp;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6dp;
+    padding: 10dp 18dp;
+    border: 1dp #3a6b3a;
+    background-color: #0a1a0ee0;
+    animation: 0.3s quadratic-out centerprint-enter;
+    transition: border-color background-color 0.5s quadratic-out;
+}
+
+.visor-centerprint-area.fading {
+    opacity: 0.35;
+}
+
+.centerprint-tag {
+    font-size: 9dp;
+    color: #3a6b3a;
+    letter-spacing: 2dp;
+}
+
+.visor-centerprint-text {
+    font-family: Space Grotesk;
+    font-size: 22dp;
+    color: #c8e6c8;
+}
