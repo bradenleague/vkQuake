@@ -167,7 +167,6 @@ class RenderInterface_VK : public Rml::RenderInterface
 
 	// Vulkan resources
 	VkPipeline			  m_pipeline_textured;
-	VkPipeline			  m_pipeline_untextured;
 	VkPipelineLayout	  m_pipeline_layout;
 	VkDescriptorPool	  m_descriptor_pool;
 	VkDescriptorSetLayout m_texture_set_layout;
@@ -191,10 +190,13 @@ class RenderInterface_VK : public Rml::RenderInterface
 	// Async texture uploads pending GPU completion
 	std::vector<PendingUpload> m_pending_uploads;
 
-	// Garbage collection for deferred resource destruction
-	// Uses double-buffering: resources queued in slot N are destroyed when slot N is processed
-	// (which happens after the GPU fence for that frame has been waited on)
-	static constexpr int		GARBAGE_SLOTS = 2;
+	// Garbage collection for deferred resource destruction.
+	// Uses double-buffering: resources queued in slot N are destroyed when slot N
+	// is revisited (which happens after the GPU fence for that frame has been waited on).
+	// GARBAGE_SLOTS must be >= the engine's DOUBLE_BUFFERED frame count to ensure
+	// resources survive until the GPU is done with them.
+	static constexpr int GARBAGE_SLOTS = 2;
+	static_assert (GARBAGE_SLOTS >= 2, "Need at least 2 garbage slots for double-buffered frame pipelining");
 	int							m_garbage_index;
 	std::vector<GeometryData *> m_geometry_garbage[GARBAGE_SLOTS];
 	std::vector<TextureData *>	m_texture_garbage[GARBAGE_SLOTS];

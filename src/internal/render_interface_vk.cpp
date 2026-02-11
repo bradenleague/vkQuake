@@ -8,6 +8,7 @@
 #include <RmlUi/Core/Core.h>
 #include <RmlUi/Core/FileInterface.h>
 #include <RmlUi/Core/Log.h>
+#include <cassert>
 #include <cstdint>
 #include <cstring>
 
@@ -27,9 +28,9 @@ namespace QRmlUI
 
 RenderInterface_VK::RenderInterface_VK ()
 	: m_config{}, m_current_cmd (VK_NULL_HANDLE), m_viewport_width (0), m_viewport_height (0), m_scissor_enabled (false), m_scissor_rect{},
-	  m_transform_enabled (false), m_frame_draw_calls (0), m_frame_indices (0), m_pipeline_textured (VK_NULL_HANDLE), m_pipeline_untextured (VK_NULL_HANDLE),
-	  m_pipeline_layout (VK_NULL_HANDLE), m_descriptor_pool (VK_NULL_HANDLE), m_texture_set_layout (VK_NULL_HANDLE), m_sampler (VK_NULL_HANDLE),
-	  m_white_texture (nullptr), m_next_geometry_handle (1), m_next_texture_handle (1), m_initialized (false), m_garbage_index (0)
+	  m_transform_enabled (false), m_frame_draw_calls (0), m_frame_indices (0), m_pipeline_textured (VK_NULL_HANDLE), m_pipeline_layout (VK_NULL_HANDLE),
+	  m_descriptor_pool (VK_NULL_HANDLE), m_texture_set_layout (VK_NULL_HANDLE), m_sampler (VK_NULL_HANDLE), m_white_texture (nullptr),
+	  m_next_geometry_handle (1), m_next_texture_handle (1), m_initialized (false), m_garbage_index (0)
 {
 	m_transform = Rml::Matrix4f::Identity ();
 }
@@ -77,13 +78,17 @@ bool RenderInterface_VK::Initialize (const VulkanConfig &config)
 	vkGetPhysicalDeviceProperties (m_config.physical_device, &device_props);
 	m_image_pool.Initialize (m_config.device, m_config.memory_properties, device_props.limits.bufferImageGranularity);
 
-	// Create default white texture for untextured geometry
+	// Create default white texture — required for untextured geometry fallback.
+	// All geometry uses the textured pipeline with this as the default texture,
+	// so initialization must fail if this texture cannot be created.
 	Rml::byte white_pixel[] = {255, 255, 255, 255};
 	auto	  white_handle = GenerateTexture (Rml::Span<const Rml::byte> (white_pixel, 4), {1, 1});
-	if (white_handle)
+	if (!white_handle)
 	{
-		m_white_texture = m_textures[white_handle];
+		Rml::Log::Message (Rml::Log::LT_ERROR, "Failed to create default white texture");
+		return false;
 	}
+	m_white_texture = m_textures[white_handle];
 
 	m_initialized = true;
 	return true;
@@ -161,11 +166,6 @@ void RenderInterface_VK::DestroyPipelines ()
 		vkDestroyPipeline (m_config.device, m_pipeline_textured, nullptr);
 		m_pipeline_textured = VK_NULL_HANDLE;
 	}
-	if (m_pipeline_untextured != VK_NULL_HANDLE)
-	{
-		vkDestroyPipeline (m_config.device, m_pipeline_untextured, nullptr);
-		m_pipeline_untextured = VK_NULL_HANDLE;
-	}
 	if (m_pipeline_layout != VK_NULL_HANDLE)
 	{
 		vkDestroyPipelineLayout (m_config.device, m_pipeline_layout, nullptr);
@@ -206,11 +206,6 @@ bool RenderInterface_VK::Reinitialize (const VulkanConfig &config)
 		vkDestroyPipeline (m_config.device, m_pipeline_textured, nullptr);
 		m_pipeline_textured = VK_NULL_HANDLE;
 	}
-	if (m_pipeline_untextured != VK_NULL_HANDLE)
-	{
-		vkDestroyPipeline (m_config.device, m_pipeline_untextured, nullptr);
-		m_pipeline_untextured = VK_NULL_HANDLE;
-	}
 	if (m_pipeline_layout != VK_NULL_HANDLE)
 	{
 		vkDestroyPipelineLayout (m_config.device, m_pipeline_layout, nullptr);
@@ -232,6 +227,9 @@ bool RenderInterface_VK::Reinitialize (const VulkanConfig &config)
 
 void RenderInterface_VK::BeginFrame (VkCommandBuffer cmd, int width, int height)
 {
+	assert (m_initialized && "BeginFrame called on uninitialized renderer");
+	assert (m_current_cmd == VK_NULL_HANDLE && "BeginFrame called without EndFrame — nested frames not allowed");
+	assert (cmd != VK_NULL_HANDLE && "BeginFrame called with null command buffer");
 	m_current_cmd = cmd;
 	m_viewport_width = width;
 	m_viewport_height = height;
@@ -263,11 +261,14 @@ void RenderInterface_VK::BeginFrame (VkCommandBuffer cmd, int width, int height)
 
 void RenderInterface_VK::EndFrame ()
 {
+	assert (m_current_cmd != VK_NULL_HANDLE && "EndFrame called without BeginFrame");
 	m_current_cmd = VK_NULL_HANDLE;
 }
 
 void RenderInterface_VK::CollectGarbage ()
 {
+	assert (m_garbage_index >= 0 && m_garbage_index < GARBAGE_SLOTS && "Garbage index out of bounds");
+
 	// Poll pending texture uploads — destroy signaled entries
 	for (auto it = m_pending_uploads.begin (); it != m_pending_uploads.end ();)
 	{
@@ -284,9 +285,11 @@ void RenderInterface_VK::CollectGarbage ()
 		}
 	}
 
-	// Toggle to the other slot - resources queued there are from 2 frames ago
-	// and are now safe to destroy (GPU fence for that frame has been waited on)
+	// Toggle to the other slot — resources queued there are from 2+ frames ago
+	// and are now safe to destroy (GPU fence for that frame has been waited on
+	// by GL_BeginRenderingTask before calling UI_CollectGarbage).
 	m_garbage_index = (m_garbage_index + 1) % GARBAGE_SLOTS;
+	assert (m_garbage_index >= 0 && m_garbage_index < GARBAGE_SLOTS);
 
 	// Destroy all geometries in this slot
 	for (GeometryData *geometry : m_geometry_garbage[m_garbage_index])
@@ -314,6 +317,7 @@ void RenderInterface_VK::SetCommandBuffer (VkCommandBuffer cmd)
 
 Rml::CompiledGeometryHandle RenderInterface_VK::CompileGeometry (Rml::Span<const Rml::Vertex> vertices, Rml::Span<const int> indices)
 {
+	assert (m_initialized && "CompileGeometry called on uninitialized renderer");
 	auto *geometry = new GeometryData ();
 	geometry->num_indices = static_cast<int> (indices.size ());
 
@@ -348,6 +352,7 @@ Rml::CompiledGeometryHandle RenderInterface_VK::CompileGeometry (Rml::Span<const
 
 void RenderInterface_VK::RenderGeometry (Rml::CompiledGeometryHandle geometry_handle, Rml::Vector2f translation, Rml::TextureHandle texture_handle)
 {
+	assert (m_white_texture != nullptr && "White texture fallback is null — initialization failed?");
 	if (m_current_cmd == VK_NULL_HANDLE)
 		return;
 
@@ -367,18 +372,17 @@ void RenderInterface_VK::RenderGeometry (Rml::CompiledGeometryHandle geometry_ha
 		}
 	}
 
-	// Use white texture if no texture specified
+	// Use white texture for untextured geometry — all geometry goes through the
+	// textured pipeline. The untextured pipeline was removed because white-texture
+	// fallback makes it unreachable.
 	if (!texture)
 	{
 		texture = m_white_texture;
 	}
 
-	// Select pipeline based on whether we have a texture
-	VkPipeline pipeline = texture ? m_pipeline_textured : m_pipeline_untextured;
-
-	// Bind pipeline
+	// Bind pipeline (always textured — white texture serves as untextured fallback)
 	auto bind_pipeline = m_config.cmd_bind_pipeline ? m_config.cmd_bind_pipeline : vkCmdBindPipeline;
-	bind_pipeline (m_current_cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+	bind_pipeline (m_current_cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline_textured);
 
 	// Set scissor
 	auto set_scissor = m_config.cmd_set_scissor ? m_config.cmd_set_scissor : vkCmdSetScissor;
@@ -621,14 +625,33 @@ Rml::TextureHandle RenderInterface_VK::GenerateTexture (Rml::Span<const Rml::byt
 	fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 
 	VkFence upload_fence;
-	vkCreateFence (m_config.device, &fence_info, nullptr, &upload_fence);
+	if (vkCreateFence (m_config.device, &fence_info, nullptr, &upload_fence) != VK_SUCCESS)
+	{
+		Rml::Log::Message (Rml::Log::LT_ERROR, "GenerateTexture: vkCreateFence failed");
+		vkDestroyCommandPool (m_config.device, cmd_pool, nullptr);
+		m_image_pool.Free (texture->memory_alloc);
+		vkDestroyImage (m_config.device, texture->image, nullptr);
+		DestroyBuffer (staging_buffer, staging_memory);
+		delete texture;
+		return 0;
+	}
 
 	VkSubmitInfo submit_info{};
 	submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	submit_info.commandBufferCount = 1;
 	submit_info.pCommandBuffers = &cmd;
 
-	vkQueueSubmit (m_config.graphics_queue, 1, &submit_info, upload_fence);
+	if (vkQueueSubmit (m_config.graphics_queue, 1, &submit_info, upload_fence) != VK_SUCCESS)
+	{
+		Rml::Log::Message (Rml::Log::LT_ERROR, "GenerateTexture: vkQueueSubmit failed");
+		vkDestroyFence (m_config.device, upload_fence, nullptr);
+		vkDestroyCommandPool (m_config.device, cmd_pool, nullptr);
+		m_image_pool.Free (texture->memory_alloc);
+		vkDestroyImage (m_config.device, texture->image, nullptr);
+		DestroyBuffer (staging_buffer, staging_memory);
+		delete texture;
+		return 0;
+	}
 
 	// Defer staging resource cleanup until fence signals
 	m_pending_uploads.push_back ({upload_fence, cmd_pool, staging_buffer, staging_memory});
@@ -647,6 +670,10 @@ Rml::TextureHandle RenderInterface_VK::GenerateTexture (Rml::Span<const Rml::byt
 
 	if (vkCreateImageView (m_config.device, &view_info, nullptr, &texture->view) != VK_SUCCESS)
 	{
+		// GPU transfer is in flight targeting this image — wait for it to complete
+		// before destroying the image. The staging buffer is tracked separately in
+		// m_pending_uploads and will be cleaned up by CollectGarbage().
+		vkWaitForFences (m_config.device, 1, &upload_fence, VK_TRUE, UINT64_MAX);
 		m_image_pool.Free (texture->memory_alloc);
 		vkDestroyImage (m_config.device, texture->image, nullptr);
 		delete texture;
@@ -664,6 +691,8 @@ Rml::TextureHandle RenderInterface_VK::GenerateTexture (Rml::Span<const Rml::byt
 
 	if (vkAllocateDescriptorSets (m_config.device, &desc_alloc_info, &texture->descriptor_set) != VK_SUCCESS)
 	{
+		// GPU transfer is in flight — wait before destroying image resources
+		vkWaitForFences (m_config.device, 1, &upload_fence, VK_TRUE, UINT64_MAX);
 		vkDestroyImageView (m_config.device, texture->view, nullptr);
 		m_image_pool.Free (texture->memory_alloc);
 		vkDestroyImage (m_config.device, texture->image, nullptr);
@@ -834,25 +863,12 @@ bool RenderInterface_VK::CreatePipeline ()
 	if (vkCreateShaderModule (m_config.device, &frag_info, nullptr, &frag_module) != VK_SUCCESS)
 	{
 		vkDestroyShaderModule (m_config.device, vert_module, nullptr);
-		Rml::Log::Message (Rml::Log::LT_ERROR, "Failed to create textured fragment shader module");
+		Rml::Log::Message (Rml::Log::LT_ERROR, "Failed to create fragment shader module");
 		return false;
 	}
 
-	VkShaderModuleCreateInfo frag_notex_info{};
-	frag_notex_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-	frag_notex_info.codeSize = rmlui_notex_frag_spv_len;
-	frag_notex_info.pCode = reinterpret_cast<const uint32_t *> (rmlui_notex_frag_spv);
-
-	VkShaderModule frag_notex_module;
-	if (vkCreateShaderModule (m_config.device, &frag_notex_info, nullptr, &frag_notex_module) != VK_SUCCESS)
-	{
-		vkDestroyShaderModule (m_config.device, vert_module, nullptr);
-		vkDestroyShaderModule (m_config.device, frag_module, nullptr);
-		Rml::Log::Message (Rml::Log::LT_ERROR, "Failed to create untextured fragment shader module");
-		return false;
-	}
-
-	// Shader stage info
+	// Only the textured pipeline is created. All geometry uses the white-texture
+	// fallback for untextured draws, so a separate untextured pipeline is unnecessary.
 	VkPipelineShaderStageCreateInfo vert_stage{};
 	vert_stage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 	vert_stage.stage = VK_SHADER_STAGE_VERTEX_BIT;
@@ -865,14 +881,7 @@ bool RenderInterface_VK::CreatePipeline ()
 	frag_stage.module = frag_module;
 	frag_stage.pName = "main";
 
-	VkPipelineShaderStageCreateInfo frag_notex_stage{};
-	frag_notex_stage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-	frag_notex_stage.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-	frag_notex_stage.module = frag_notex_module;
-	frag_notex_stage.pName = "main";
-
-	VkPipelineShaderStageCreateInfo stages_textured[] = {vert_stage, frag_stage};
-	VkPipelineShaderStageCreateInfo stages_untextured[] = {vert_stage, frag_notex_stage};
+	VkPipelineShaderStageCreateInfo stages[] = {vert_stage, frag_stage};
 
 	// Vertex input - RmlUI vertex format: position (vec2), color (u8vec4), texcoord (vec2)
 	VkVertexInputBindingDescription binding{};
@@ -964,7 +973,7 @@ bool RenderInterface_VK::CreatePipeline ()
 	VkGraphicsPipelineCreateInfo pipeline_info{};
 	pipeline_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 	pipeline_info.stageCount = 2;
-	pipeline_info.pStages = stages_textured;
+	pipeline_info.pStages = stages;
 	pipeline_info.pVertexInputState = &vertex_input;
 	pipeline_info.pInputAssemblyState = &input_assembly;
 	pipeline_info.pViewportState = &viewport_state;
@@ -981,29 +990,13 @@ bool RenderInterface_VK::CreatePipeline ()
 	{
 		vkDestroyShaderModule (m_config.device, vert_module, nullptr);
 		vkDestroyShaderModule (m_config.device, frag_module, nullptr);
-		vkDestroyShaderModule (m_config.device, frag_notex_module, nullptr);
-		Rml::Log::Message (Rml::Log::LT_ERROR, "Failed to create textured pipeline");
-		return false;
-	}
-
-	// Create untextured pipeline
-	pipeline_info.pStages = stages_untextured;
-
-	if (vkCreateGraphicsPipelines (m_config.device, VK_NULL_HANDLE, 1, &pipeline_info, nullptr, &m_pipeline_untextured) != VK_SUCCESS)
-	{
-		vkDestroyShaderModule (m_config.device, vert_module, nullptr);
-		vkDestroyShaderModule (m_config.device, frag_module, nullptr);
-		vkDestroyShaderModule (m_config.device, frag_notex_module, nullptr);
-		vkDestroyPipeline (m_config.device, m_pipeline_textured, nullptr);
-		m_pipeline_textured = VK_NULL_HANDLE;
-		Rml::Log::Message (Rml::Log::LT_ERROR, "Failed to create untextured pipeline");
+		Rml::Log::Message (Rml::Log::LT_ERROR, "Failed to create pipeline");
 		return false;
 	}
 
 	// Clean up shader modules (no longer needed after pipeline creation)
 	vkDestroyShaderModule (m_config.device, vert_module, nullptr);
 	vkDestroyShaderModule (m_config.device, frag_module, nullptr);
-	vkDestroyShaderModule (m_config.device, frag_notex_module, nullptr);
 
 	return true;
 }

@@ -150,7 +150,11 @@ static VkFence			command_buffer_fences[DOUBLE_BUFFERED];
 static qboolean			frame_submitted[DOUBLE_BUFFERED];
 static VkFramebuffer	main_framebuffers[NUM_COLOR_BUFFERS];
 static VkSemaphore		image_aquired_semaphores[DOUBLE_BUFFERED];
-static VkSemaphore		draw_complete_semaphores[DOUBLE_BUFFERED];
+// Per-swapchain-image "render finished" semaphores, following Khronos guidance
+// (swapchain_semaphore_reuse.html). Indexed by swapchain image index, not
+// frame-in-flight index, to prevent semaphore reuse hazards when the
+// presentation engine hands back images out of order.
+static VkSemaphore		draw_complete_semaphores[MAX_SWAP_CHAIN_IMAGES];
 static VkFramebuffer	ui_framebuffers[MAX_SWAP_CHAIN_IMAGES];
 static VkFramebuffer	postprocess_framebuffers[MAX_SWAP_CHAIN_IMAGES];
 static VkSampler		postprocess_sampler;
@@ -1517,11 +1521,8 @@ static void GL_InitCommandBuffers (void)
 		err = vkCreateFence (vulkan_globals.device, &fence_create_info, NULL, &command_buffer_fences[i]);
 		if (err != VK_SUCCESS)
 			Sys_Error ("vkCreateFence failed");
-
-		ZEROED_STRUCT (VkSemaphoreCreateInfo, semaphore_create_info);
-		semaphore_create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-		err = vkCreateSemaphore (vulkan_globals.device, &semaphore_create_info, NULL, &draw_complete_semaphores[i]);
 	}
+	// Note: draw_complete_semaphores are now created per-swapchain-image in GL_CreateSwapChain
 }
 
 /*
@@ -2451,6 +2452,18 @@ static qboolean GL_CreateSwapChain (void)
 			Sys_Error ("vkCreateSemaphore failed");
 	}
 
+	// One draw-complete semaphore per swapchain image (not per frame-in-flight).
+	// This follows Khronos guidance for semaphore reuse safety: each swapchain
+	// image gets its own "render finished" semaphore, preventing reuse hazards
+	// when the presentation engine returns images out of order.
+	for (i = 0; i < num_swap_chain_images; ++i)
+	{
+		assert (draw_complete_semaphores[i] == VK_NULL_HANDLE);
+		err = vkCreateSemaphore (vulkan_globals.device, &semaphore_create_info, NULL, &draw_complete_semaphores[i]);
+		if (err != VK_SUCCESS)
+			Sys_Error ("vkCreateSemaphore failed");
+	}
+
 	return true;
 }
 
@@ -2676,6 +2689,12 @@ static void GL_DestroyRenderResources (void)
 	{
 		vkDestroySemaphore (vulkan_globals.device, image_aquired_semaphores[i], NULL);
 		image_aquired_semaphores[i] = VK_NULL_HANDLE;
+	}
+
+	for (uint32_t i = 0; i < num_swap_chain_images; ++i)
+	{
+		vkDestroySemaphore (vulkan_globals.device, draw_complete_semaphores[i], NULL);
+		draw_complete_semaphores[i] = VK_NULL_HANDLE;
 	}
 
 	fpDestroySwapchainKHR (vulkan_globals.device, vulkan_swapchain, NULL);
@@ -3410,8 +3429,12 @@ static void GL_EndRenderingTask (end_rendering_parms_t *parms)
 		submit_info.waitSemaphoreCount = swapchain_acquired ? 1 : 0;
 		submit_info.pWaitSemaphores = &image_aquired_semaphores[cb_index];
 		submit_info.signalSemaphoreCount = swapchain_acquired ? 1 : 0;
-		submit_info.pSignalSemaphores = &draw_complete_semaphores[cb_index];
-		VkPipelineStageFlags wait_dst_stage_mask = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+		submit_info.pSignalSemaphores = &draw_complete_semaphores[current_swapchain_buffer];
+		// Wait at COLOR_ATTACHMENT_OUTPUT: world and UI render to off-screen color
+		// buffers (not the swapchain image), so they can proceed in parallel with
+		// image acquisition. Only the post-process pass writes to the swapchain
+		// image as a color attachment, making this the precise first-use stage.
+		VkPipelineStageFlags wait_dst_stage_mask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 		submit_info.pWaitDstStageMask = &wait_dst_stage_mask;
 
 		err = vkQueueSubmit (vulkan_globals.queue, 1, &submit_info, command_buffer_fences[cb_index]);
@@ -3434,7 +3457,7 @@ static void GL_EndRenderingTask (end_rendering_parms_t *parms)
 		present_info.swapchainCount = 1;
 		present_info.pSwapchains = &vulkan_swapchain, present_info.pImageIndices = &current_swapchain_buffer;
 		present_info.waitSemaphoreCount = 1;
-		present_info.pWaitSemaphores = &draw_complete_semaphores[cb_index];
+		present_info.pWaitSemaphores = &draw_complete_semaphores[current_swapchain_buffer];
 		err = fpQueuePresentKHR (vulkan_globals.queue, &present_info);
 #if defined(VK_EXT_full_screen_exclusive)
 		if ((err == VK_ERROR_OUT_OF_DATE_KHR) || (err == VK_ERROR_SURFACE_LOST_KHR) || (err == VK_SUBOPTIMAL_KHR) ||
