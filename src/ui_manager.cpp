@@ -100,12 +100,6 @@ struct UIManagerState
 
 	// Document & asset tracking
 	std::unordered_map<std::string, Rml::ElementDocument *> documents;
-	std::string												ui_base_path;
-	std::string												engine_base_path;
-
-	// Mouse position
-	int last_mouse_x = 0;
-	int last_mouse_y = 0;
 
 	// Display DPI scale (cached, updated on init/resize)
 	float dpi_scale = 1.0f;
@@ -177,18 +171,21 @@ void UpdateDpRatio ()
 	float blend = (base_ratio > 1.0f) ? std::min (base_ratio - 1.0f, 1.0f) : 0.0f;
 	float effective_dpi = g_state.dpi_scale * (1.0f - blend) + blend;
 
+	// Viewport cap: ensure automatic scaling doesn't push menus off-screen
+	// at small window sizes on high-DPI displays.  Only the auto-computed
+	// portion (resolution + DPI) is capped — user scale is applied after
+	// so the slider always has a visible effect.  Menus already have
+	// max-height + overflow:auto to handle the overflow.
+	float auto_dp = base_ratio * effective_dpi;
+	float viewport_cap = VIEWPORT_FIT_FRACTION * static_cast<float> (g_state.height) / MAX_MENU_HEIGHT_DP;
+	if (auto_dp > viewport_cap)
+		auto_dp = viewport_cap;
+
 	float user_scale = static_cast<float> (Cvar_VariableValue ("scr_uiscale"));
 	if (user_scale < DP_RATIO_MIN)
 		user_scale = 1.0f;
 
-	float dp_ratio = base_ratio * effective_dpi * user_scale;
-
-	// Viewport cap: ensure tallest menu always fits in the window height.
-	// Without this, DPI scaling can push dp content past the viewport edge
-	// at small window sizes on high-DPI displays.
-	float viewport_cap = VIEWPORT_FIT_FRACTION * static_cast<float> (g_state.height) / MAX_MENU_HEIGHT_DP;
-	if (dp_ratio > viewport_cap)
-		dp_ratio = viewport_cap;
+	float dp_ratio = auto_dp * user_scale;
 
 	if (dp_ratio < DP_RATIO_MIN)
 		dp_ratio = DP_RATIO_MIN;
@@ -196,6 +193,29 @@ void UpdateDpRatio ()
 		dp_ratio = DP_RATIO_MAX;
 
 	g_state.context->SetDensityIndependentPixelRatio (dp_ratio);
+}
+
+// Font scale: body font-size = BASE_BODY_FONT_DP * scr_fontscale.
+// All rem-based text sizes scale proportionally; dp layout is unaffected.
+constexpr float BASE_BODY_FONT_DP = 18.0f;
+static float	s_last_font_scale = -1.0f;
+
+void UpdateFontScale ()
+{
+	float font_scale = static_cast<float> (Cvar_VariableValue ("scr_fontscale"));
+	if (font_scale < 0.75f || font_scale > 2.0f)
+		font_scale = 1.0f;
+	if (font_scale == s_last_font_scale)
+		return;
+	s_last_font_scale = font_scale;
+
+	float body_dp = BASE_BODY_FONT_DP * font_scale;
+	char  prop[32];
+	snprintf (prop, sizeof (prop), "%.1fdp", body_dp);
+
+	for (auto &pair : g_state.documents)
+		if (pair.second)
+			pair.second->SetProperty ("font-size", prop);
 }
 
 bool IsMenuDocumentPath (const std::string &path)
@@ -234,12 +254,13 @@ extern "C"
 			return 1;
 		}
 
+		(void)base_path; // Historically used for engine_base_path; kept for API compat.
+
 		// Reset any leftover state in case we reinitialize within the same process.
 		g_state = UIManagerState{};
 
 		g_state.width = width;
 		g_state.height = height;
-		g_state.engine_base_path = (base_path && base_path[0]) ? base_path : "";
 
 		// Create interfaces
 		g_state.file_interface = std::make_unique<QRmlUI::QuakeFileInterface> ();
@@ -425,6 +446,7 @@ extern "C"
 
 		// Reset all mutable state so a reinit starts clean.
 		g_state = UIManagerState{};
+		s_last_font_scale = -1.0f;
 		Con_DPrintf ("UI_Shutdown: RmlUI shut down\n");
 	}
 
@@ -465,11 +487,9 @@ extern "C"
 		{
 			UI_SetInputMode (UI_INPUT_INACTIVE);
 			Con_DPrintf ("UI_HandleEscape: Menu stack empty, returning to game\n");
-#ifdef __cplusplus
 			// Restore game input when leaving menus.
 			IN_Activate ();
 			key_dest = key_game;
-#endif
 		}
 		else
 		{
@@ -560,6 +580,7 @@ extern "C"
 
 		// Recompute dp ratio each frame so scr_uiscale changes take effect live.
 		UpdateDpRatio ();
+		UpdateFontScale ();
 		double phase_end = Sys_DoubleTime ();
 		g_state.perf_last.update_dp_ms = (phase_end - phase_start) * 1000.0;
 		phase_start = phase_end;
@@ -770,10 +791,6 @@ extern "C"
 		int px = static_cast<int> (x * g_state.pixel_ratio);
 		int py = static_cast<int> (y * g_state.pixel_ratio);
 
-		// Store position for hit testing debug
-		g_state.last_mouse_x = px;
-		g_state.last_mouse_y = py;
-
 		if (!IsRmlUiEnabled () || !g_state.initialized || !g_state.context)
 			return 0;
 		if (!g_state.visible && g_state.menu_stack.empty ())
@@ -842,12 +859,6 @@ extern "C"
 		return consumed ? 1 : 0;
 	}
 
-	// Path resolution — QuakeFileInterface handles mod-directory layering.
-	static std::string ResolveUIPath (const char *path)
-	{
-		return path ? path : "";
-	}
-
 	int UI_LoadDocument (const char *path)
 	{
 		if (!path)
@@ -865,19 +876,26 @@ extern "C"
 			return 1; // Already loaded
 		}
 
-		// Resolve the path relative to UI base directory
-		std::string resolved_path = ResolveUIPath (path);
-
-		Rml::ElementDocument *doc = g_state.context->LoadDocument (resolved_path);
+		Rml::ElementDocument *doc = g_state.context->LoadDocument (path);
 		if (!doc)
 		{
-			Con_Printf ("UI_LoadDocument: Failed to load '%s' (resolved: '%s')\n", path, resolved_path.c_str ());
+			Con_Printf ("UI_LoadDocument: Failed to load '%s'\n", path);
 			return 0;
 		}
 
 		// Store with original path as key for consistency
 		g_state.documents[path] = doc;
 		QRmlUI::MenuEventHandler::RegisterWithDocument (doc);
+
+		// Apply current font scale to newly loaded document
+		float font_scale = static_cast<float> (Cvar_VariableValue ("scr_fontscale"));
+		if (font_scale < 0.75f || font_scale > 2.0f)
+			font_scale = 1.0f;
+		float body_dp = BASE_BODY_FONT_DP * font_scale;
+		char  fs_prop[32];
+		snprintf (fs_prop, sizeof (fs_prop), "%.1fdp", body_dp);
+		doc->SetProperty ("font-size", fs_prop);
+
 		Con_DPrintf ("UI_LoadDocument: Loaded '%s'\n", path);
 		return 1;
 	}
@@ -997,6 +1015,7 @@ extern "C"
 
 		// Invalidate deferred pointer — documents are about to be replaced.
 		g_state.pending_menu_enter = nullptr;
+		s_last_font_scale = -1.0f;
 
 		// Store visibility state and reload each document
 		for (auto &pair : g_state.documents)
@@ -1305,23 +1324,9 @@ extern "C"
 			QRmlUI::CvarBindingManager::SyncToUI ();
 		}
 
-		// Load document if not already loaded
-		auto it = g_state.documents.find (path);
-		if (it == g_state.documents.end () || !it->second)
-		{
-			// Resolve the path relative to UI base directory
-			std::string resolved_path = ResolveUIPath (path);
-
-			Rml::ElementDocument *doc = g_state.context->LoadDocument (resolved_path);
-			if (!doc)
-			{
-				Con_Printf ("UI_PushMenu: Failed to load '%s' (resolved: '%s')\n", path, resolved_path.c_str ());
-				return;
-			}
-			// Store with original path as key for consistency
-			g_state.documents[path] = doc;
-			QRmlUI::MenuEventHandler::RegisterWithDocument (doc);
-		}
+		// Load document if not already loaded (font-scale applied inside)
+		if (!UI_LoadDocument (path))
+			return;
 
 		// Hide current menu if there is one (optional - could layer them)
 		if (!g_state.menu_stack.empty ())
@@ -1371,6 +1376,26 @@ extern "C"
 		UI_HandleEscape ();
 	}
 
+	// ── HUD helpers ────────────────────────────────────────────────────
+
+	static void LoadAndShowHudChild (const char *path, bool &visible)
+	{
+		if (UI_LoadDocument (path))
+		{
+			UI_ShowDocument (path, 0);
+			visible = true;
+		}
+	}
+
+	static void HideHudChild (const char *path, bool &visible)
+	{
+		if (visible)
+		{
+			UI_HideDocument (path);
+			visible = false;
+		}
+	}
+
 	// ── HUD / Scoreboard / Intermission ────────────────────────────────
 
 	void UI_ShowHUD (const char *hud_document)
@@ -1408,21 +1433,9 @@ extern "C"
 		// Show order = render order; children render on top of main HUD.
 		if (g_state.hud_visible)
 		{
-			if (UI_LoadDocument (QRmlUI::Paths::kHudNotify))
-			{
-				UI_ShowDocument (QRmlUI::Paths::kHudNotify, 0);
-				g_state.notify_visible = true;
-			}
-			if (UI_LoadDocument (QRmlUI::Paths::kHudCenterprint))
-			{
-				UI_ShowDocument (QRmlUI::Paths::kHudCenterprint, 0);
-				g_state.centerprint_visible = true;
-			}
-			if (UI_LoadDocument (QRmlUI::Paths::kHudChat))
-			{
-				UI_ShowDocument (QRmlUI::Paths::kHudChat, 0);
-				g_state.chat_visible = true;
-			}
+			LoadAndShowHudChild (QRmlUI::Paths::kHudNotify, g_state.notify_visible);
+			LoadAndShowHudChild (QRmlUI::Paths::kHudCenterprint, g_state.centerprint_visible);
+			LoadAndShowHudChild (QRmlUI::Paths::kHudChat, g_state.chat_visible);
 		}
 
 		// Reset intermission tracking on new game/map
@@ -1438,21 +1451,9 @@ extern "C"
 			UI_HideDocument (g_state.current_hud.c_str ());
 			g_state.hud_visible = false;
 		}
-		if (g_state.notify_visible)
-		{
-			UI_HideDocument (QRmlUI::Paths::kHudNotify);
-			g_state.notify_visible = false;
-		}
-		if (g_state.centerprint_visible)
-		{
-			UI_HideDocument (QRmlUI::Paths::kHudCenterprint);
-			g_state.centerprint_visible = false;
-		}
-		if (g_state.chat_visible)
-		{
-			UI_HideDocument (QRmlUI::Paths::kHudChat);
-			g_state.chat_visible = false;
-		}
+		HideHudChild (QRmlUI::Paths::kHudNotify, g_state.notify_visible);
+		HideHudChild (QRmlUI::Paths::kHudCenterprint, g_state.centerprint_visible);
+		HideHudChild (QRmlUI::Paths::kHudChat, g_state.chat_visible);
 		if (g_state.intermission_visible)
 		{
 			UI_HideDocument (QRmlUI::Paths::kIntermission);
